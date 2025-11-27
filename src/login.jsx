@@ -39,7 +39,6 @@ export default function Login() {
       const { error } = await signIn({ email, password });
       if (error) throw error;
     } catch (error) {
-      // Handle error messages
       if (error.message.includes("Invalid login credentials")) {
         setError(
           "Sorry, your password was incorrect. Please double check your password."
@@ -76,7 +75,6 @@ export default function Login() {
     }
   };
 
-  // Clear error
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
     if (error) setError("");
@@ -89,25 +87,35 @@ export default function Login() {
 
   return (
     <>
-      <div className="flex min-h-screen items-center justify-center md:justify-end">
-        <div className="login-image">
-          <img src={educationImg} alt="Login Visual" />
+      <div className="flex min-h-screen items-center justify-center md:justify-end p-3 xs:p-4 sm:p-6">
+        {/* Hide image on mobile, show on tablet and desktop */}
+        <div className="login-image hidden md:block md:w-1/2 lg:w-1/2 xl:w-1/2">
+          <img
+            src={educationImg}
+            alt="Login Visual"
+            className="img-responsive"
+            loading="lazy"
+          />
         </div>
 
-        <div className="w-full md:w-1/2 flex items-center justify-center px-4">
-          <Card className="w-full max-w-md md:max-w-md min-h-[500px] mt-8 md:mt-0 py-6">
-            <CardHeader>
-              <CardTitle className="text-center login">Login</CardTitle>
-              <CardDescription className="text-center">
+        <div className="w-full md:w-1/2 flex items-center justify-center px-3 xs:px-4">
+          <Card className="w-full max-w-xs xs:max-w-sm sm:max-w-md md:max-w-md min-h-[400px] xs:min-h-[450px] sm:min-h-[500px] mt-0 md:mt-0 py-4 xs:py-5 sm:py-6 card-responsive">
+            <CardHeader className="p-responsive">
+              <CardTitle className="text-center text-xl xs:text-2xl sm:text-3xl login text-title">
+                Login
+              </CardTitle>
+              <CardDescription className="text-center text-sm xs:text-base text-responsive">
                 Enter your email below to login to your account
               </CardDescription>
             </CardHeader>
 
-            <CardContent>
-              <form onSubmit={handleSubmit}>
-                <div className="flex flex-col gap-5">
+            <CardContent className="p-responsive">
+              <form onSubmit={handleSubmit} className="form-responsive">
+                <div className="flex flex-col gap-4 xs:gap-5">
                   <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-sm xs:text-base">
+                      Email
+                    </Label>
                     <Input
                       id="email"
                       type="email"
@@ -115,16 +123,23 @@ export default function Login() {
                       value={email}
                       onChange={handleEmailChange}
                       disabled={loading}
-                      className={error ? "border-red-500" : ""}
+                      className={`text-sm xs:text-base touch-friendly ${
+                        error ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
 
                   <div className="grid gap-2">
                     <div className="flex items-center">
-                      <Label htmlFor="password">Password</Label>
+                      <Label
+                        htmlFor="password"
+                        className="text-sm xs:text-base"
+                      >
+                        Password
+                      </Label>
                       <a
                         href="#"
-                        className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                        className="ml-auto inline-block text-xs xs:text-sm underline-offset-4 hover:underline touch-friendly"
                       >
                         Forgot your password?
                       </a>
@@ -135,72 +150,83 @@ export default function Login() {
                         id="password"
                         type={showPassword ? "text" : "password"}
                         required
-                        className={`pr-10 ${error ? "border-red-500" : ""}`}
+                        className={`text-sm xs:text-base pr-10 touch-friendly ${
+                          error ? "border-red-500" : ""
+                        }`}
                         value={password}
                         onChange={handlePasswordChange}
                         disabled={loading}
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-2 flex items-center"
+                        className="absolute inset-y-0 right-2 flex items-center touch-friendly"
                         onClick={() => setShowPassword((prev) => !prev)}
                         tabIndex={-1}
                         disabled={loading}
                       >
                         {showPassword ? (
-                          <FaEyeSlash className="w-5 h-5" />
+                          <FaEyeSlash className="w-4 h-4 xs:w-5 xs:h-5" />
                         ) : (
-                          <FaEye className="w-5 h-5" />
+                          <FaEye className="w-4 h-4 xs:w-5 xs:h-5" />
                         )}
                       </button>
                     </div>
-                    {/* Display wrong password ni siya*/}
                     {error && (
-                      <div className="text-red-700 px-[-3px] rounded text-sm">
+                      <div className="text-red-700 text-xs xs:text-sm break-word">
                         <div className="flex items-center">{error}</div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <CardDescription className="text-left mt-4">
+                <CardDescription className="text-left mt-4 text-xs xs:text-sm break-word">
                   You don't have an account?
-                  <Button variant="link" disabled={loading}>
+                  <Button
+                    variant="link"
+                    disabled={loading}
+                    className="text-xs xs:text-sm touch-friendly"
+                  >
                     <Link to="/signup" className="reg">
                       Sign Up
                     </Link>
                   </Button>
                 </CardDescription>
 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button
+                  type="submit"
+                  className="w-full btn-responsive touch-friendly"
+                  disabled={loading}
+                >
                   {loading ? "Signing in..." : "Login"}
                 </Button>
               </form>
             </CardContent>
 
-            <CardFooter className="flex-col gap-2">
+            <CardFooter className="flex-col gap-2 p-responsive">
               <div className="flex items-center w-full mt-[-15px]">
                 <hr className="flex-grow border-t border-gray-300" />
-                <span className="mx-3 text-gray-500">OR</span>
+                <span className="mx-3 text-gray-500 text-xs xs:text-sm">
+                  OR
+                </span>
                 <hr className="flex-grow border-t border-gray-300" />
               </div>
               <Button
                 variant="outline"
-                className="w-full flex items-center justify-center gap-2"
+                className="w-full flex items-center justify-center gap-2 btn-responsive touch-friendly"
                 onClick={handleGoogleLogin}
                 disabled={loading}
               >
-                <FcGoogle className="w-5 h-5" />
-                Login with Google
+                <FcGoogle className="w-4 h-4 xs:w-5 xs:h-5" />
+                <span className="text-xs xs:text-sm">Login with Google</span>
               </Button>
               <Button
                 variant="outline"
-                className="w-full flex items-center justify-center gap-2 mt-2"
+                className="w-full flex items-center justify-center gap-2 mt-2 btn-responsive touch-friendly"
                 onClick={handleFacebookLogin}
                 disabled={loading}
               >
-                <FaFacebook className="w-5 h-5 text-blue-600" />
-                Login with Facebook
+                <FaFacebook className="w-4 h-4 xs:w-5 xs:h-5 text-blue-600" />
+                <span className="text-xs xs:text-sm">Login with Facebook</span>
               </Button>
             </CardFooter>
           </Card>

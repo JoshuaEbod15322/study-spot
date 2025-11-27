@@ -68,6 +68,20 @@ function Dashboard() {
     endTime: "10:00",
   });
 
+  // Mobile state
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Initial data load
   useEffect(() => {
     if (user) {
       fetchUserProfile();
@@ -77,6 +91,7 @@ function Dashboard() {
     }
   }, [user]);
 
+  // Library staff data
   useEffect(() => {
     if (userProfile?.role === "library_staff") {
       fetchPendingApprovals();
@@ -84,16 +99,15 @@ function Dashboard() {
     }
   }, [userProfile]);
 
+  // User profile fetch
   const fetchUserProfile = async () => {
     try {
       if (!user) return;
-
       const { data, error } = await supabase
         .from("users")
         .select("*")
         .eq("id", user.id)
         .single();
-
       if (error) throw error;
       setUserProfile(data);
     } catch (error) {
@@ -102,6 +116,7 @@ function Dashboard() {
     }
   };
 
+  // Study places fetch
   const fetchStudyPlaces = async () => {
     try {
       const { data: placesData, error } = await supabase
@@ -116,7 +131,6 @@ function Dashboard() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-
       setStudyPlaces(placesData || []);
 
       const reactionsObj = {};
@@ -172,6 +186,7 @@ function Dashboard() {
     }
   };
 
+  // Following posts fetch
   const fetchFollowingPosts = async () => {
     if (!user) {
       console.log("No user found");
@@ -304,10 +319,10 @@ function Dashboard() {
     }
   };
 
+  // Reservations fetch
   const fetchReservations = async () => {
     try {
       if (!user) return;
-
       const { data, error } = await supabase
         .from("reservations")
         .select(
@@ -331,10 +346,10 @@ function Dashboard() {
     }
   };
 
+  // Reserved count fetch
   const fetchReservedCount = async () => {
     try {
       if (!user) return;
-
       const { count, error } = await supabase
         .from("reservations")
         .select("id", { count: "exact", head: true })
@@ -348,10 +363,10 @@ function Dashboard() {
     }
   };
 
+  // Pending approvals fetch
   const fetchPendingApprovals = async () => {
     try {
       if (!user) return;
-
       const { data, error } = await supabase
         .from("reservations")
         .select(
@@ -369,17 +384,16 @@ function Dashboard() {
         console.error("Supabase error:", error);
         throw error;
       }
-
       setPendingApprovals(data || []);
     } catch (error) {
       console.error("Error fetching pending approvals:", error);
     }
   };
 
+  // User reservations fetch
   const fetchUserReservations = async () => {
     try {
       if (!user) return;
-
       const { data, error } = await supabase
         .from("reservations")
         .select(
@@ -397,13 +411,13 @@ function Dashboard() {
         console.error("Supabase error:", error);
         throw error;
       }
-
       setUserReservations(data || []);
     } catch (error) {
       console.error("Error fetching user reservations:", error);
     }
   };
 
+  // Comments fetch
   const fetchComments = async (studyPlaceId) => {
     try {
       const { data, error } = await supabase
@@ -424,6 +438,7 @@ function Dashboard() {
     }
   };
 
+  // Navigation handlers
   const handleProfileClick = () => {
     setCurrentView("profile");
   };
@@ -435,7 +450,6 @@ function Dashboard() {
   const handleFollowingClick = () => {
     const isStudentOrTeacher =
       userProfile?.role === "student" || userProfile?.role === "teacher";
-
     if (isStudentOrTeacher) {
       setCurrentView("following");
       fetchFollowingPosts();
@@ -452,6 +466,7 @@ function Dashboard() {
     setCurrentView("messages");
   };
 
+  // Reservation handlers
   const handleReserveClick = (place) => {
     if (userProfile?.role === "library_staff") return;
     setSelectedPlace(place);
@@ -466,7 +481,6 @@ function Dashboard() {
   const handleReserve = async () => {
     try {
       if (!user || !selectedPlace) return;
-
       const { error } = await supabase.from("reservations").insert([
         {
           user_id: user.id,
@@ -513,7 +527,6 @@ function Dashboard() {
   const handleUpdateReservation = async () => {
     try {
       if (!selectedReservation) return;
-
       const { error } = await supabase
         .from("reservations")
         .update({
@@ -544,6 +557,7 @@ function Dashboard() {
     }
   };
 
+  // Approval handlers
   const handleApproveReservation = async (reservationId) => {
     try {
       const { error } = await supabase
@@ -564,7 +578,6 @@ function Dashboard() {
       setPendingApprovals((prev) =>
         prev.filter((approval) => approval.id !== reservationId)
       );
-
       fetchPendingApprovals();
       fetchUserReservations();
       fetchReservedCount();
@@ -590,7 +603,6 @@ function Dashboard() {
       setPendingApprovals((prev) =>
         prev.filter((approval) => approval.id !== reservationId)
       );
-
       fetchUserReservations();
       fetchReservedCount();
 
@@ -636,6 +648,7 @@ function Dashboard() {
     }
   };
 
+  // Post management handlers
   const handleToggleAvailability = async (placeId, currentStatus) => {
     try {
       const { error } = await supabase
@@ -692,10 +705,10 @@ function Dashboard() {
     }
   };
 
+  // Comment handlers
   const handleAddComment = async (placeId, commentText) => {
     try {
       if (!user) return;
-
       const { error } = await supabase.from("comments").insert([
         {
           user_id: user.id,
@@ -723,10 +736,10 @@ function Dashboard() {
     setCommentsModalOpen(true);
   };
 
+  // Like handler
   const handleLike = async (placeId) => {
     try {
       if (!user) return;
-
       const { data: existingLike, error: checkError } = await supabase
         .from("reactions")
         .select("id")
@@ -774,6 +787,7 @@ function Dashboard() {
     }
   };
 
+  // Post creation handlers
   const handleCreatePost = async (e) => {
     e.preventDefault();
     if (!userProfile || userProfile.role !== "library_staff" || !user) return;
@@ -845,6 +859,7 @@ function Dashboard() {
     setReservationData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Auth handler
   const handleSignOut = async () => {
     try {
       setSigningOut(true);
@@ -856,6 +871,7 @@ function Dashboard() {
     }
   };
 
+  // Utility functions
   const getUserReservation = (placeId) => {
     return reservations.find(
       (r) =>
@@ -868,13 +884,14 @@ function Dashboard() {
   const isStudentOrTeacher =
     userProfile?.role === "student" || userProfile?.role === "teacher";
 
+  // Skeleton component
   const StudyPlaceSkeleton = () => (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="responsive-card">
       <div className="p-4 flex items-center space-x-3">
         <Skeleton className="w-8 h-8 rounded-full" />
         <Skeleton className="h-4 w-24" />
       </div>
-      <Skeleton className="w-full h-48 rounded-none" />
+      <Skeleton className="responsive-image rounded-none" />
       <div className="p-4 space-y-3">
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-4 w-full" />
@@ -899,6 +916,7 @@ function Dashboard() {
     </div>
   );
 
+  // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -912,36 +930,45 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {successMessage && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-in slide-in-from-right">
           {successMessage}
         </div>
       )}
 
-      <Sidebar
-        userProfile={userProfile}
-        pendingApprovals={pendingApprovals}
-        onPost={() => setPostModalOpen(true)}
-        onApprovals={() => setApprovalsModalOpen(true)}
-        onReservations={() => {
-          fetchUserReservations();
-          setReservationsModalOpen(true);
-        }}
-        onSignOut={handleSignOut}
-        onSettingsToggle={() => setSettingsOpen(!settingsOpen)}
-        onProfileClick={handleProfileClick}
-        onHomeClick={handleHomeClick}
-        onFollowingClick={handleFollowingClick}
-        onReservedClick={handleReservedClick}
-        currentView={currentView}
-        settingsOpen={settingsOpen}
-        signingOut={signingOut}
-        reservedCount={reservedCount}
-      />
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <Sidebar
+          userProfile={userProfile}
+          pendingApprovals={pendingApprovals}
+          onPost={() => setPostModalOpen(true)}
+          onApprovals={() => setApprovalsModalOpen(true)}
+          onReservations={() => {
+            fetchUserReservations();
+            setReservationsModalOpen(true);
+          }}
+          onSignOut={handleSignOut}
+          onSettingsToggle={() => setSettingsOpen(!settingsOpen)}
+          onProfileClick={handleProfileClick}
+          onHomeClick={handleHomeClick}
+          onFollowingClick={handleFollowingClick}
+          onReservedClick={handleReservedClick}
+          currentView={currentView}
+          settingsOpen={settingsOpen}
+          signingOut={signingOut}
+          reservedCount={reservedCount}
+          isMobile={false}
+        />
+      )}
 
-      <div className="flex-1 flex flex-col ml-64">
-        <main className="flex-1 p-6 relative">
+      {/* Main Content */}
+      <div
+        className={`flex-1 flex flex-col ${
+          !isMobile ? "md:ml-64" : ""
+        } mobile-safe-area`}
+      >
+        <main className="flex-1 p-4 sm:p-6 relative">
           {currentView === "profile" ? (
             <Profile onBackToDashboard={handleHomeClick} />
           ) : currentView === "following" ? (
@@ -971,19 +998,20 @@ function Dashboard() {
           ) : (
             <>
               {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="responsive-grid">
                   {[...Array(6)].map((_, index) => (
                     <StudyPlaceSkeleton key={index} />
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="responsive-grid">
                   {studyPlaces.length === 0 ? (
                     <div className="col-span-full text-center py-12">
                       <img
                         src={educationImg}
-                        alt="Login Visual"
-                        className="max-w-xs mx-auto mb-4"
+                        alt="No posts available"
+                        className="max-w-xs mx-auto mb-4 w-full h-auto"
+                        loading="lazy"
                       />
                       <p className="text-gray-500 text-lg mb-2">
                         No posts yet.
@@ -1021,18 +1049,48 @@ function Dashboard() {
                   )}
                 </div>
               )}
-
-              <Button
-                onClick={handleMessagesClick}
-                className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors group"
-              >
-                <FaComment className="w-6 h-6 group-hover:scale-110 transition-transform" />
-              </Button>
             </>
           )}
+
+          {/* Floating Action Button */}
+          <Button
+            onClick={handleMessagesClick}
+            className={`fixed ${
+              isMobile ? "bottom-20" : "bottom-6"
+            } right-4 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-colors group touch-target z-40`}
+            aria-label="Open messages"
+          >
+            <FaComment className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          </Button>
         </main>
       </div>
 
+      {/* Mobile Bottom Navigation */}
+      {isMobile && (
+        <Sidebar
+          userProfile={userProfile}
+          pendingApprovals={pendingApprovals}
+          onPost={() => setPostModalOpen(true)}
+          onApprovals={() => setApprovalsModalOpen(true)}
+          onReservations={() => {
+            fetchUserReservations();
+            setReservationsModalOpen(true);
+          }}
+          onSignOut={handleSignOut}
+          onSettingsToggle={() => setSettingsOpen(!settingsOpen)}
+          onProfileClick={handleProfileClick}
+          onHomeClick={handleHomeClick}
+          onFollowingClick={handleFollowingClick}
+          onReservedClick={handleReservedClick}
+          currentView={currentView}
+          settingsOpen={settingsOpen}
+          signingOut={signingOut}
+          reservedCount={reservedCount}
+          isMobile={true}
+        />
+      )}
+
+      {/* Modals */}
       <PostModal
         open={postModalOpen}
         onOpenChange={setPostModalOpen}

@@ -1,4 +1,3 @@
-// src/signup.jsx
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "./App.css";
+import "./responsive.css";
 import { Link } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -46,7 +46,6 @@ function Signup() {
       ...prev,
       [e.target.id]: e.target.value,
     }));
-    // Clear error when user starts typing
     if (error) setError("");
   };
 
@@ -70,13 +69,10 @@ function Signup() {
 
       if (error) throw error;
 
-      // Show success message - user is automatically logged in
       if (data.user) {
         setSuccess("Account created successfully! Redirecting...");
-        // The user will be automatically redirected by AuthContext
       }
     } catch (error) {
-      // Handle specific error messages
       if (error.message.includes("User already registered")) {
         setError("An account with this email already exists.");
       } else if (
@@ -112,27 +108,29 @@ function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-      <Card className="w-full max-w-sm shadow-xl rounded-2xl">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold tracking-tight">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-3 xs:p-4 sm:p-6">
+      <Card className="w-full max-w-xs xs:max-w-sm sm:max-w-md shadow-xl rounded-lg sm:rounded-xl card-responsive">
+        <CardHeader className="p-responsive">
+          <CardTitle className="text-center text-xl xs:text-2xl sm:text-3xl font-bold tracking-tight text-title">
             StudySpot
           </CardTitle>
-          <CardDescription className="text-center text-md">
+          <CardDescription className="text-center text-sm xs:text-base sm:text-md text-responsive">
             Create a new account to see places and study with your friends.
           </CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
-          <CardContent className="grid gap-4">
+          <CardContent className="grid gap-3 xs:gap-4 sm:gap-4 p-responsive">
             {success && (
-              <div className="bg-green-100 text-green-700 p-3 rounded-md text-sm border border-green-300">
+              <div className="bg-green-100 text-green-700 p-3 rounded-md text-xs xs:text-sm border border-green-300 break-word">
                 {success}
               </div>
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="name">Username</Label>
+              <Label htmlFor="name" className="text-sm xs:text-base">
+                Username
+              </Label>
               <Input
                 id="name"
                 type="text"
@@ -141,12 +139,14 @@ function Signup() {
                 onChange={handleChange}
                 disabled={loading}
                 placeholder="Enter your username"
+                className="text-sm xs:text-base touch-friendly"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-
+              <Label htmlFor="email" className="text-sm xs:text-base">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -155,24 +155,29 @@ function Signup() {
                 onChange={handleChange}
                 disabled={loading}
                 placeholder="Enter your email"
-                className={error ? "border-red-500" : ""}
+                className={`text-sm xs:text-base touch-friendly ${
+                  error ? "border-red-500" : ""
+                }`}
               />
-              {/*Display message email */}
               {error && (
-                <div className="text-red-700 text-sm ">
+                <div className="text-red-700 text-xs xs:text-sm break-word">
                   <div className="flex items-center">{error}</div>
                 </div>
               )}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm xs:text-base">
+                Password
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   required
-                  className={`pr-10 ${error ? "border-red-500" : ""}`}
+                  className={`text-sm xs:text-base pr-10 touch-friendly ${
+                    error ? "border-red-500" : ""
+                  }`}
                   value={formData.password}
                   onChange={handleChange}
                   disabled={loading}
@@ -183,28 +188,28 @@ function Signup() {
                   type="button"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-2 flex items-center text-gray-600 hover:text-gray-800"
+                  className="absolute inset-y-0 right-2 flex items-center text-gray-600 hover:text-gray-800 touch-friendly"
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <FaEyeSlash className="w-5 h-5" />
+                    <FaEyeSlash className="w-4 h-4 xs:w-5 xs:h-5" />
                   ) : (
-                    <FaEye className="w-5 h-5" />
+                    <FaEye className="w-4 h-4 xs:w-5 xs:h-5" />
                   )}
                 </button>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 break-word">
                 Password must be at least 6 characters
               </p>
             </div>
 
             <div className="grid gap-2">
-              <Label>Role</Label>
+              <Label className="text-sm xs:text-base">Role</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-between text-gray-700"
+                    className="w-full justify-between text-gray-700 text-sm xs:text-base touch-friendly"
                     disabled={loading}
                   >
                     {role === "library_staff"
@@ -212,17 +217,28 @@ function Signup() {
                       : role.charAt(0).toUpperCase() + role.slice(1)}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                  <DropdownMenuLabel>Select your role</DropdownMenuLabel>
+                <DropdownMenuContent className="w-56 modal-responsive">
+                  <DropdownMenuLabel className="text-sm xs:text-base">
+                    Select your role
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuRadioGroup value={role} onValueChange={setRole}>
-                    <DropdownMenuRadioItem value="student">
+                    <DropdownMenuRadioItem
+                      value="student"
+                      className="text-sm xs:text-base touch-friendly"
+                    >
                       Student
                     </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="teacher">
+                    <DropdownMenuRadioItem
+                      value="teacher"
+                      className="text-sm xs:text-base touch-friendly"
+                    >
                       Teacher
                     </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="library_staff">
+                    <DropdownMenuRadioItem
+                      value="library_staff"
+                      className="text-sm xs:text-base touch-friendly"
+                    >
                       Library Staff
                     </DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
@@ -231,41 +247,49 @@ function Signup() {
             </div>
           </CardContent>
 
-          <CardDescription className="m-[-4px] text-left px-7">
+          <CardDescription className="m-[-4px] text-left px-7 xs:px-7 text-xs xs:text-sm break-word">
             Already have an account?
-            <Button variant="link" disabled={loading}>
+            <Button
+              variant="link"
+              disabled={loading}
+              className="text-xs xs:text-sm touch-friendly"
+            >
               <Link to="/login" className="reg">
                 Sign In
               </Link>
             </Button>
           </CardDescription>
 
-          <CardFooter className="flex flex-col space-y-3">
-            <Button type="submit" className="w-full" disabled={loading}>
+          <CardFooter className="flex flex-col space-y-3 xs:space-y-3 sm:space-y-3 p-responsive">
+            <Button
+              type="submit"
+              className="w-full btn-responsive touch-friendly"
+              disabled={loading}
+            >
               {loading ? "Creating account..." : "Create Account"}
             </Button>
             <div className="flex items-center w-full">
               <div className="flex-grow border-t border-gray-300" />
-              <span className="mx-3 text-sm text-gray-500">OR</span>
+              <span className="mx-3 text-xs xs:text-sm text-gray-500">OR</span>
               <div className="flex-grow border-t border-gray-300" />
             </div>
             <Button
               variant="outline"
-              className="w-full flex items-center justify-center gap-2"
+              className="w-full flex items-center justify-center gap-2 btn-responsive touch-friendly"
               onClick={handleGoogleSignup}
               disabled={loading}
             >
-              <FcGoogle className="w-5 h-5" />
-              Continue with Google
+              <FcGoogle className="w-4 h-4 xs:w-5 xs:h-5" />
+              <span className="text-xs xs:text-sm">Continue with Google</span>
             </Button>
             <Button
               variant="outline"
-              className="w-full flex items-center justify-center gap-2"
+              className="w-full flex items-center justify-center gap-2 btn-responsive touch-friendly"
               onClick={handleFacebookSignup}
               disabled={loading}
             >
-              <FaFacebook className="w-5 h-5 text-blue-600" />
-              Continue with Facebook
+              <FaFacebook className="w-4 h-4 xs:w-5 xs:h-5 text-blue-600" />
+              <span className="text-xs xs:text-sm">Continue with Facebook</span>
             </Button>
           </CardFooter>
         </form>

@@ -12,12 +12,14 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
 
+  // Initial data fetch
   useEffect(() => {
     if (user) {
       fetchReservedPlaces();
     }
   }, [user]);
 
+  // Reserved places data fetch
   const fetchReservedPlaces = async () => {
     try {
       setLoading(true);
@@ -52,6 +54,7 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
     }
   };
 
+  // Reservation cancellation handler
   const handleCancelReservation = async (reservationId) => {
     try {
       setCancellingId(reservationId);
@@ -63,7 +66,6 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
 
       if (error) throw error;
 
-      // Remove from local state
       setReservedPlaces((prev) =>
         prev.filter((reservation) => reservation.id !== reservationId)
       );
@@ -74,6 +76,7 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
     }
   };
 
+  // Status badge display helper
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { variant: "secondary", label: "Pending" },
@@ -89,10 +92,12 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  // Time formatting helper
   const formatTime = (timeString) => {
     return format(new Date(`2000-01-01T${timeString}`), "h:mm a");
   };
 
+  // Loading state
   if (loading) {
     return (
       <div className="space-y-4">
@@ -116,6 +121,7 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
 
   return (
     <div className="space-y-6">
+      {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -125,6 +131,7 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
         </div>
       </div>
 
+      {/* Empty State */}
       {reservedPlaces.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
@@ -137,6 +144,7 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
           </CardContent>
         </Card>
       ) : (
+        /* Reservations List */
         <div className="space-y-4">
           {reservedPlaces.map((reservation) => (
             <Card key={reservation.id} className="overflow-hidden">
@@ -158,6 +166,7 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
               </CardHeader>
 
               <CardContent className="pt-0">
+                {/* Reservation Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <p className="text-sm font-medium text-gray-700">Date</p>
@@ -179,6 +188,7 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
                   </div>
                 </div>
 
+                {/* Description Section */}
                 {reservation.study_place?.description && (
                   <div className="mb-4">
                     <p className="text-sm font-medium text-gray-700">
@@ -190,6 +200,7 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
                   </div>
                 )}
 
+                {/* Action Buttons */}
                 <div className="flex justify-end space-x-2">
                   <Button
                     variant="outline"

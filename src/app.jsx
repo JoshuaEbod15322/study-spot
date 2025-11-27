@@ -1,15 +1,15 @@
-// app.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./login.jsx";
 import Signup from "./signup.jsx";
 import Dashboard from "./dashboard.jsx";
+import "./responsive.css";
 import { AuthProvider, useAuth } from "./contexts/AuthContext.jsx";
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>; // Or your loading component
+    return <div>Loading...</div>;
   }
 
   return user ? children : <Navigate to="/login" replace />;
@@ -19,14 +19,14 @@ function PublicRoute({ children }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>; // Or your loading component
+    return <div>Loading...</div>;
   }
 
   return !user ? children : <Navigate to="/dashboard" replace />;
 }
 
 function AppRoutes() {
-  const { user, loading } = useAuth(); // Add user here
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -38,7 +38,6 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Redirect to login if not authenticated, dashboard if authenticated */}
       <Route
         path="/"
         element={

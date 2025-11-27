@@ -1,10 +1,8 @@
-// src/components/StudyPlaceCard.jsx
 import {
   FaUser,
   FaMapMarkerAlt,
   FaRegHeart,
   FaRegComment,
-  FaRegBookmark,
   FaHeart,
   FaEdit,
   FaTrash,
@@ -36,21 +34,21 @@ export function StudyPlaceCard({
   const isLibraryStaff = userProfile?.role === "library_staff";
   const isOwner = isLibraryStaff && place.created_by === userProfile?.id;
 
-  // Get the creator information - FIXED
+  // Creator information extraction
   const creator = place.creator || place.users;
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      {/* User Info with Hover Card - FIXED */}
+    <div className="responsive-card">
       <div className="p-4 flex items-center space-x-3">
         {creator && (
           <UserHoverCard user={creator}>
-            <div className="flex items-center space-x-3 cursor-pointer">
+            <div className="flex items-center space-x-3 cursor-pointer touch-target">
               {creator.profile_picture_url ? (
                 <img
                   src={creator.profile_picture_url}
                   alt={creator.name}
                   className="w-8 h-8 rounded-full object-cover"
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
@@ -65,33 +63,33 @@ export function StudyPlaceCard({
         )}
       </div>
 
-      {/* Rest of the component remains the same */}
-      {/* Study Place Image */}
+      {/* Study place image display */}
       {place.image_url ? (
         <img
           src={place.image_url}
           alt={place.name}
-          className="w-full h-48 object-cover"
+          className="responsive-image"
+          loading="lazy"
         />
       ) : (
-        <div className="w-full h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+        <div className="responsive-image bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-4xl mb-2">📚</div>
+            <div className="text-4xl mb-2" aria-hidden="true">
+              <FaMapMarkerAlt className="mx-auto text-blue-400" />
+            </div>
             <p className="text-blue-600 font-medium">Study Spot</p>
           </div>
         </div>
       )}
 
-      {/* Study Place Content */}
+      {/* Study place content section */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-          {place.name}
-        </h3>
-        <p className="text-gray-600 text-sm mb-3">
+        <h3 className="responsive-title mb-1">{place.name}</h3>
+        <p className="responsive-text mb-3">
           {place.description || "No description available."}
         </p>
 
-        {/* Status */}
+        {/* Availability status display */}
         <div className="mb-3">
           <span className="text-sm text-gray-700">Status: </span>
           <span
@@ -103,25 +101,34 @@ export function StudyPlaceCard({
           </span>
         </div>
 
-        {/* Location */}
+        {/* Location information */}
         <div className="flex items-center text-gray-600 text-sm mb-4">
-          <FaMapMarkerAlt className="w-4 h-4 mr-2 text-gray-400" />
+          <FaMapMarkerAlt
+            className="w-4 h-4 mr-2 text-gray-400"
+            aria-hidden="true"
+          />
           <span>{place.location}</span>
         </div>
 
-        {/* Reactions */}
+        {/* Reaction buttons section */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-4">
-            {/* Like Button */}
             <button
               onClick={() => onLike(place.id)}
-              className="flex items-center space-x-1 cursor-pointer group"
+              className="flex items-center space-x-1 cursor-pointer group touch-target"
               disabled={!userProfile}
+              aria-label={placeReactions.userLiked ? "Unlike" : "Like"}
             >
               {placeReactions.userLiked ? (
-                <FaHeart className="w-4 h-4 text-red-500 fill-red-500" />
+                <FaHeart
+                  className="w-4 h-4 text-red-500 fill-red-500"
+                  aria-hidden="true"
+                />
               ) : (
-                <FaRegHeart className="w-4 h-4 text-gray-400 group-hover:text-red-500" />
+                <FaRegHeart
+                  className="w-4 h-4 text-gray-400 group-hover:text-red-500"
+                  aria-hidden="true"
+                />
               )}
               <span
                 className={`text-sm ${
@@ -134,12 +141,16 @@ export function StudyPlaceCard({
               </span>
             </button>
 
-            {/* Comments Button */}
+            {/* Comments view button */}
             <button
               onClick={() => onViewComments(place)}
-              className="flex items-center space-x-1 cursor-pointer group"
+              className="flex items-center space-x-1 cursor-pointer group touch-target"
+              aria-label="View comments"
             >
-              <FaRegComment className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
+              <FaRegComment
+                className="w-4 h-4 text-gray-400 group-hover:text-blue-500"
+                aria-hidden="true"
+              />
               <span className="text-sm text-gray-600 group-hover:text-blue-500">
                 {placeReactions.comments}
               </span>
@@ -147,58 +158,60 @@ export function StudyPlaceCard({
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action buttons section */}
         <div className="space-y-2">
-          {/* Library Staff Actions */}
           {isOwner && (
-            <>
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 onClick={() =>
                   onToggleAvailability(place.id, place.is_available)
                 }
-                className={`w-full ${
+                className={`responsive-button ${
                   place.is_available
                     ? "bg-orange-600 hover:bg-orange-700"
                     : "bg-green-600 hover:bg-green-700"
-                }`}
+                } touch-target w-full`}
               >
                 {place.is_available ? "Set Unavailable" : "Set Available"}
               </Button>
+              {/* Post deletion button */}
               <Button
                 onClick={() => onDeletePost(place.id)}
                 variant="destructive"
-                className="w-full"
+                className="responsive-button touch-target w-full"
               >
-                <FaTrash className="w-4 h-4 mr-2" />
-                Delete Post
+                <FaTrash className="w-4 h-4 mr-2" aria-hidden="true" />
+                Delete
               </Button>
-            </>
+            </div>
           )}
 
-          {/* Student/Teacher Reservation Actions */}
+          {/* Initial reservation button */}
           {canReserve && (
             <Button
               onClick={() => onReserve(place)}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="responsive-button bg-blue-600 hover:bg-blue-700 touch-target w-full"
             >
               Reserve Now
             </Button>
           )}
 
+          {/* Reservation edit button */}
           {userReservation && isStudentOrTeacher && (
             <Button
               onClick={() => onEditReservation(userReservation)}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="responsive-button bg-green-600 hover:bg-green-700 touch-target w-full"
             >
-              <FaEdit className="w-4 h-4 mr-2" />
+              <FaEdit className="w-4 h-4 mr-2" aria-hidden="true" />
               Edit Reservation
             </Button>
           )}
 
+          {/* Full reservation state */}
           {!place.is_available && isStudentOrTeacher && !userReservation && (
             <Button
               disabled
-              className="w-full bg-gray-300 text-gray-600 cursor-not-allowed"
+              className="responsive-button bg-gray-300 text-gray-600 cursor-not-allowed w-full"
             >
               Reservation Full
             </Button>

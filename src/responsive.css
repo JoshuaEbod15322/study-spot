@@ -1,0 +1,120 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@layer components {
+  .responsive-container {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .responsive-card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300;
+  }
+
+  .responsive-image {
+    @apply w-full h-48 sm:h-56 md:h-64 lg:h-72 xl:h-80 object-cover;
+  }
+
+  .responsive-title {
+    @apply text-lg sm:text-xl md:text-2xl font-semibold text-gray-900;
+  }
+
+  .responsive-text {
+    @apply text-sm sm:text-base text-gray-600;
+  }
+
+  .responsive-button {
+    @apply w-full sm:w-auto px-4 py-2 text-sm sm:text-base;
+  }
+
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
+  }
+
+  .mobile-bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg md:hidden z-50;
+  }
+
+  .mobile-nav-button {
+    @apply flex flex-col items-center justify-center p-2 text-gray-600 hover:text-blue-600 transition-colors min-w-0 flex-1;
+  }
+
+  .mobile-nav-icon {
+    @apply w-5 h-5 mb-1;
+  }
+
+  .mobile-nav-text {
+    @apply text-xs truncate;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-bottom-nav {
+      display: none !important;
+    }
+  }
+
+  .desktop-sidebar {
+    @apply hidden md:flex md:flex-col md:w-64 lg:w-80 bg-gray-50 border-r border-gray-200;
+  }
+
+  .mobile-safe-area {
+    @apply pb-20 md:pb-0;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.mobile-menu-enter {
+  animation: slideUp 0.3s ease-out;
+}
+
+.mobile-menu-exit {
+  animation: slideDown 0.3s ease-in;
+}
+
+@media (max-width: 640px) {
+  button,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+}
+
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}

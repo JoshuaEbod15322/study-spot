@@ -1,5 +1,4 @@
-// src/components/Modals.jsx
-import { useState } from "react"; // Add this import
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +32,7 @@ import {
 } from "react-icons/fa";
 import { format } from "date-fns";
 
-// Generate time options
+// Time options generation
 const timeOptions = [];
 for (let hour = 8; hour <= 20; hour++) {
   for (let minute = 0; minute < 60; minute += 30) {
@@ -542,8 +541,6 @@ export function CommentsModal({
   );
 }
 
-// Updated ApprovalsModal with delete functionality
-// Updated ApprovalsModal with all user info and reservation details
 export function ApprovalsModal({
   open,
   onOpenChange,
@@ -592,7 +589,6 @@ export function ApprovalsModal({
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    {/* User Information */}
                     <div className="space-y-2">
                       <div>
                         <span className="font-medium text-gray-700">
@@ -620,7 +616,6 @@ export function ApprovalsModal({
                       </div>
                     </div>
 
-                    {/* Reservation Details */}
                     <div className="space-y-2">
                       <div>
                         <span className="font-medium text-gray-700">
@@ -662,7 +657,6 @@ export function ApprovalsModal({
                     </div>
                   </div>
 
-                  {/* Status and Additional Info */}
                   <div className="mt-3 pt-3 border-t border-gray-200">
                     <div className="flex items-center justify-between">
                       <div>
@@ -766,7 +760,7 @@ export function ApprovalsModal({
     </Dialog>
   );
 }
-// Updated ReservationsModal to show accepted reservations and allow deletion
+
 export function ReservationsModal({
   open,
   onOpenChange,
