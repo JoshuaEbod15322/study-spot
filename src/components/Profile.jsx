@@ -820,8 +820,8 @@ function UserCard({ user, onUnfollow, currentUserId }) {
   );
 }
 
-// User Hover Card Component
-export function UserHoverCard({ user, children, onMessageUser }) {
+// User Click Card Component (replaced HoverCard)
+export function UserClickCard({ user, children, onMessageUser }) {
   const { user: currentUser } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -919,79 +919,82 @@ export function UserHoverCard({ user, children, onMessageUser }) {
   const isCurrentUser = currentUser?.id === user?.id;
 
   return (
-    <HoverCard open={isOpen} onOpenChange={setIsOpen}>
-      <HoverCardTrigger asChild>
-        {children || (
-          <div
-            className="cursor-pointer inline-flex items-center space-x-2 p-2 rounded hover:bg-gray-100 touch-target"
-            onClick={() => setIsOpen(true)}
-          >
-            <Avatar className="w-6 h-6">
+    <div className="relative">
+      <div
+        className="cursor-pointer inline-flex items-center space-x-2 p-2 rounded hover:bg-gray-100 touch-target"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <Avatar className="w-6 h-6">
+          <AvatarImage src={userData?.profile_picture_url} />
+          <AvatarFallback className="text-xs">
+            {userData?.name?.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <span className="font-medium text-sm hover:text-blue-600 truncate">
+          {userData?.name}
+        </span>
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-50 w-80 max-w-[90vw] bg-white border border-gray-200 rounded-lg shadow-lg p-4 mt-2">
+          <div className="flex justify-between space-x-4">
+            <Avatar className="w-16 h-16 flex-shrink-0">
               <AvatarImage src={userData?.profile_picture_url} />
-              <AvatarFallback className="text-xs">
+              <AvatarFallback className="text-lg">
                 {userData?.name?.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <span className="font-medium text-sm hover:text-blue-600 truncate">
-              {userData?.name}
-            </span>
-          </div>
-        )}
-      </HoverCardTrigger>
-      <HoverCardContent className="w-80 max-w-[90vw]" align="start">
-        <div className="flex justify-between space-x-4">
-          <Avatar className="w-16 h-16 flex-shrink-0">
-            <AvatarImage src={userData?.profile_picture_url} />
-            <AvatarFallback className="text-lg">
-              {userData?.name?.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="space-y-2 flex-1 min-w-0">
-            <div className="flex items-center space-x-2">
-              <h4 className="text-sm font-semibold truncate">
-                {userData?.name}
-              </h4>
-              <Badge
-                variant="outline"
-                className="capitalize text-xs flex-shrink-0"
-              >
-                {userData?.role?.replace("_", " ") || "user"}
-              </Badge>
-            </div>
-            <p className="text-sm text-gray-600 line-clamp-2">
-              {userData?.bio || "No bio yet."}
-            </p>
+            <div className="space-y-2 flex-1 min-w-0">
+              <div className="flex items-center space-x-2">
+                <h4 className="text-sm font-semibold truncate">
+                  {userData?.name}
+                </h4>
+                <Badge
+                  variant="outline"
+                  className="capitalize text-xs flex-shrink-0"
+                >
+                  {userData?.role?.replace("_", " ") || "user"}
+                </Badge>
+              </div>
+              <p className="text-sm text-gray-600 line-clamp-2">
+                {userData?.bio || "No bio yet."}
+              </p>
 
-            {/* Profile Stats Section */}
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>{userData?.follower_count || 0} followers</span>
-              <span>{userData?.following_count || 0} following</span>
-            </div>
+              {/* Profile Stats Section */}
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>{userData?.follower_count || 0} followers</span>
+                <span>{userData?.following_count || 0} following</span>
+              </div>
 
-            <div className="flex flex-col sm:flex-row items-center pt-1 space-y-2 sm:space-y-0 sm:space-x-2">
-              <Button
-                size="sm"
-                className="flex-1 w-full sm:w-auto"
-                onClick={handleMessageUser}
-              >
-                <FaEnvelope className="w-3 h-3 mr-1" />
-                Message
-              </Button>
-              {!isCurrentUser && (
+              <div className="flex flex-col sm:flex-row items-center pt-1 space-y-2 sm:space-y-0 sm:space-x-2">
                 <Button
                   size="sm"
-                  variant={isFollowing ? "outline" : "default"}
-                  onClick={isFollowing ? handleUnfollow : handleFollow}
-                  disabled={loading}
                   className="flex-1 w-full sm:w-auto"
+                  onClick={handleMessageUser}
                 >
-                  {loading ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
+                  <FaEnvelope className="w-3 h-3 mr-1" />
+                  Message
                 </Button>
-              )}
+                {!isCurrentUser && (
+                  <Button
+                    size="sm"
+                    variant={isFollowing ? "outline" : "default"}
+                    onClick={isFollowing ? handleUnfollow : handleFollow}
+                    disabled={loading}
+                    className="flex-1 w-full sm:w-auto"
+                  >
+                    {loading
+                      ? "Loading..."
+                      : isFollowing
+                      ? "Unfollow"
+                      : "Follow"}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </HoverCardContent>
-    </HoverCard>
+      )}
+    </div>
   );
 }

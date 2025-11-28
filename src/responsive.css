@@ -118,3 +118,31 @@ html {
     font-size: 16px;
   }
 }
+
+.responsive-image {
+  @apply w-full h-48 sm:h-56 md:h-64 lg:h-72 xl:h-80 object-cover;
+  loading: lazy;
+  decoding: async;
+}
+
+.optimized-img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.critical-content {
+  content-visibility: auto;
+  contain-intrinsic-size: 500px;
+}
+
+/* Reduce layout shifts */
+.responsive-card {
+  min-height: 400px; /* Reserve space */
+}
+
+/* Optimize animations */
+@media (prefers-reduced-motion: no-preference) {
+  .hover-animation {
+    transition: all 0.2s ease-in-out;
+  }
+}

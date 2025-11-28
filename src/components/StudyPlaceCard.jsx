@@ -8,7 +8,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
-import { UserHoverCard } from "./Profile";
+import { UserClickCard } from "./Profile"; // Changed from UserHoverCard to UserClickCard
 
 export function StudyPlaceCard({
   place,
@@ -41,7 +41,9 @@ export function StudyPlaceCard({
     <div className="responsive-card">
       <div className="p-4 flex items-center space-x-3">
         {creator && (
-          <UserHoverCard user={creator}>
+          <UserClickCard user={creator}>
+            {" "}
+            {/* Changed from UserHoverCard to UserClickCard */}
             <div className="flex items-center space-x-3 cursor-pointer touch-target">
               {creator.profile_picture_url ? (
                 <img
@@ -59,7 +61,7 @@ export function StudyPlaceCard({
                 {creator.name || "Unknown User"}
               </span>
             </div>
-          </UserHoverCard>
+          </UserClickCard>
         )}
       </div>
 
