@@ -490,7 +490,7 @@ function RoleBasedPosts({ userProfile }) {
   );
 }
 
-// Component to display user's reserved spaces
+// Component to display user reserved spaces
 function ReservedSpaces({ userProfile }) {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -589,7 +589,7 @@ function ReservedSpaces({ userProfile }) {
   );
 }
 
-// Component to display user's liked posts
+// Component to display user liked posts
 function LikedPosts({ userProfile }) {
   const [likedPosts, setLikedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -598,7 +598,7 @@ function LikedPosts({ userProfile }) {
     fetchLikedPosts();
   }, [userProfile]);
 
-  // Fetch user's liked posts from Supabase
+  // Fetch user liked posts from Supabase
   const fetchLikedPosts = async () => {
     try {
       const { data: reactionsData, error } = await supabase

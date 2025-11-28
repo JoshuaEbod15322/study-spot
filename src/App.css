@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* login page */
+/* Login page */
 .login {
   font-size: 1.8rem;
   font-weight: 700;
@@ -12,7 +12,7 @@
   margin-left: -10px;
 }
 
-/* image login page */
+/* Image login page */
 .login-image {
   position: relative;
   display: flex;
@@ -30,6 +30,7 @@
   object-fit: contain;
   transition: opacity 0.25s ease-in-out;
   display: block;
+  content-visibility: auto;
 }
 
 .login-image::after {
@@ -59,11 +60,38 @@
   }
 }
 
-/* signup page */
+/* Signup page */
 .signup-card {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   margin: 0;
+}
+
+/* Performance optimizations */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Critical above-the-fold styles */
+.critical-load {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Mobile safe area */
+.mobile-safe-area {
+  padding-bottom: 80px;
+}
+
+@media (min-width: 768px) {
+  .mobile-safe-area {
+    padding-bottom: 0;
+  }
 }
