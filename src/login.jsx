@@ -1,4 +1,3 @@
-// src/login.jsx
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -88,7 +87,6 @@ export default function Login() {
   return (
     <>
       <div className="flex min-h-screen items-center justify-center md:justify-end p-3 xs:p-4 sm:p-6">
-        {/* Hide image on mobile, show on tablet and desktop */}
         <div className="login-image hidden md:block md:w-1/2 lg:w-1/2 xl:w-1/2">
           <img
             src={educationImg}
@@ -157,19 +155,6 @@ export default function Login() {
                         onChange={handlePasswordChange}
                         disabled={loading}
                       />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-2 flex items-center touch-friendly"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        tabIndex={-1}
-                        disabled={loading}
-                      >
-                        {showPassword ? (
-                          <FaEyeSlash className="w-4 h-4 xs:w-5 xs:h-5" />
-                        ) : (
-                          <FaEye className="w-4 h-4 xs:w-5 xs:h-5" />
-                        )}
-                      </button>
                     </div>
                     {error && (
                       <div className="text-red-700 text-xs xs:text-sm break-word">

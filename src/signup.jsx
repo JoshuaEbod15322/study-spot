@@ -184,19 +184,6 @@ function Signup() {
                   placeholder="Create a password"
                   minLength="6"
                 />
-                <button
-                  type="button"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute inset-y-0 right-2 flex items-center text-gray-600 hover:text-gray-800 touch-friendly"
-                  disabled={loading}
-                >
-                  {showPassword ? (
-                    <FaEyeSlash className="w-4 h-4 xs:w-5 xs:h-5" />
-                  ) : (
-                    <FaEye className="w-4 h-4 xs:w-5 xs:h-5" />
-                  )}
-                </button>
               </div>
               <p className="text-xs text-gray-500 break-word">
                 Password must be at least 6 characters

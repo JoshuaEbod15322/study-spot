@@ -1,12 +1,6 @@
-// src/components/Profile.jsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,28 +23,26 @@ import {
   FaArrowLeft,
   FaCamera,
   FaTrash,
+  FaHeart,
 } from "react-icons/fa";
 
+// Main profile component with user information and editing capabilities
 export function Profile({ onBackToDashboard }) {
   const { user } = useAuth();
   const [userProfile, setUserProfile] = useState(null);
-  const [followers, setFollowers] = useState([]);
-  const [following, setFollowing] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [uploading, setUploading] = useState(false);
 
-  // Initial data fetch
   useEffect(() => {
     if (user) {
       fetchUserProfile();
-      fetchFollowers();
-      fetchFollowing();
     }
   }, [user]);
 
+  // Fetch user profile data from Supabase
   const fetchUserProfile = async () => {
     try {
       const { data, error } = await supabase
@@ -73,7 +65,7 @@ export function Profile({ onBackToDashboard }) {
     }
   };
 
-  // Profile picture upload handler
+  // Handle profile picture upload
   const handleImageUpload = async (event) => {
     try {
       setUploading(true);
@@ -82,7 +74,7 @@ export function Profile({ onBackToDashboard }) {
       if (!file) return;
 
       if (!file.type.startsWith("image/")) {
-        setSuccessMessage("Please select a valid image file (JPEG, PNG, etc.)");
+        setSuccessMessage("Please select a valid image file");
         setTimeout(() => setSuccessMessage(""), 3000);
         return;
       }
@@ -137,11 +129,11 @@ export function Profile({ onBackToDashboard }) {
       }
 
       setUserProfile((prev) => ({ ...prev, profile_picture_url: publicUrl }));
-      setSuccessMessage("Profile picture updated successfully!");
+      setSuccessMessage("Profile picture updated!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Error uploading profile picture:", error);
-      setSuccessMessage("Error uploading profile picture. Please try again.");
+      setSuccessMessage("Error uploading profile picture");
       setTimeout(() => setSuccessMessage(""), 3000);
     } finally {
       setUploading(false);
@@ -149,7 +141,7 @@ export function Profile({ onBackToDashboard }) {
     }
   };
 
-  // Profile picture removal handler
+  // Remove profile picture
   const handleRemoveProfilePicture = async () => {
     try {
       setUploading(true);
@@ -173,46 +165,18 @@ export function Profile({ onBackToDashboard }) {
       if (updateError) throw updateError;
 
       setUserProfile((prev) => ({ ...prev, profile_picture_url: null }));
-      setSuccessMessage("Profile picture removed successfully!");
+      setSuccessMessage("Profile picture removed!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Error removing profile picture:", error);
-      setSuccessMessage("Error removing profile picture. Please try again.");
+      setSuccessMessage("Error removing profile picture");
       setTimeout(() => setSuccessMessage(""), 3000);
     } finally {
       setUploading(false);
     }
   };
 
-  const fetchFollowers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("followers")
-        .select("follower_id")
-        .eq("following_id", user.id);
-
-      if (error) throw error;
-      setFollowers(data || []);
-    } catch (error) {
-      console.error("Error fetching followers:", error);
-    }
-  };
-
-  const fetchFollowing = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("followers")
-        .select("following_id")
-        .eq("follower_id", user.id);
-
-      if (error) throw error;
-      setFollowing(data || []);
-    } catch (error) {
-      console.error("Error fetching following:", error);
-    }
-  };
-
-  // Profile update handler
+  // Save profile changes
   const handleSaveProfile = async () => {
     try {
       const { error } = await supabase
@@ -227,69 +191,15 @@ export function Profile({ onBackToDashboard }) {
 
       setUserProfile((prev) => ({ ...prev, ...editForm }));
       setEditing(false);
-      setSuccessMessage("Profile updated successfully!");
+      setSuccessMessage("Profile updated!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Error updating profile:", error);
-      setSuccessMessage("Error updating profile. Please try again.");
+      setSuccessMessage("Error updating profile");
       setTimeout(() => setSuccessMessage(""), 3000);
     }
   };
 
-  // Follow user handler
-  const handleFollow = async (targetUserId) => {
-    try {
-      if (!user || user.id === targetUserId) return;
-
-      const { error } = await supabase.from("followers").insert([
-        {
-          follower_id: user.id,
-          following_id: targetUserId,
-        },
-      ]);
-
-      if (error) {
-        if (error.code === "23505") {
-          await Promise.all([fetchFollowers(), fetchFollowing()]);
-          return;
-        }
-        throw error;
-      }
-
-      await Promise.all([fetchFollowers(), fetchFollowing()]);
-      setSuccessMessage("User followed successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      console.error("Error following user:", error);
-      setSuccessMessage("Error following user. Please try again.");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    }
-  };
-
-  // Unfollow user handler
-  const handleUnfollow = async (targetUserId) => {
-    try {
-      if (!user || user.id === targetUserId) return;
-
-      const { error } = await supabase
-        .from("followers")
-        .delete()
-        .eq("follower_id", user.id)
-        .eq("following_id", targetUserId);
-
-      if (error) throw error;
-
-      await Promise.all([fetchFollowers(), fetchFollowing()]);
-      setSuccessMessage("User unfollowed successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      console.error("Error unfollowing user:", error);
-      setSuccessMessage("Error unfollowing user. Please try again.");
-      setTimeout(() => setSuccessMessage(""), 3000);
-    }
-  };
-
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 md:ml-0 p-4 md:p-6 flex items-center justify-center mobile-safe-area">
@@ -298,7 +208,6 @@ export function Profile({ onBackToDashboard }) {
     );
   }
 
-  // Error state
   if (!userProfile) {
     return (
       <div className="min-h-screen bg-gray-50 md:ml-0 p-4 md:p-6 flex items-center justify-center mobile-safe-area">
@@ -312,23 +221,21 @@ export function Profile({ onBackToDashboard }) {
   return (
     <div className="min-h-screen bg-gray-50 md:ml-0 p-4 md:p-6 mobile-safe-area">
       {successMessage && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-in slide-in-from-right">
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
           {successMessage}
         </div>
       )}
 
       <div className="max-w-4xl mx-auto">
-        {/* Profile Header Section */}
         <Card className="mb-6">
           <CardContent className="p-4 md:p-6">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between space-y-4 md:space-y-0">
               <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
-                {/* Profile Picture Section */}
                 <div className="relative group">
                   <div className="relative">
                     <Avatar className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
                       <AvatarImage src={userProfile.profile_picture_url} />
-                      <AvatarFallback className="text-lg">
+                      <AvatarFallback>
                         {userProfile.name?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -369,14 +276,11 @@ export function Profile({ onBackToDashboard }) {
                   )}
                 </div>
 
-                {/* Profile Information Section */}
                 <div className="flex-1 text-center sm:text-left">
                   {editing ? (
                     <div className="space-y-3 w-full">
                       <div>
-                        <Label htmlFor="name" className="text-sm md:text-base">
-                          Name
-                        </Label>
+                        <Label htmlFor="name">Name</Label>
                         <Input
                           id="name"
                           value={editForm.name}
@@ -386,13 +290,10 @@ export function Profile({ onBackToDashboard }) {
                               name: e.target.value,
                             }))
                           }
-                          className="w-full"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="bio" className="text-sm md:text-base">
-                          Bio
-                        </Label>
+                        <Label htmlFor="bio">Bio</Label>
                         <Textarea
                           id="bio"
                           value={editForm.bio}
@@ -403,7 +304,7 @@ export function Profile({ onBackToDashboard }) {
                             }))
                           }
                           placeholder="Tell us about yourself..."
-                          className="w-full min-h-[80px]"
+                          className="min-h-[80px]"
                         />
                       </div>
                       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -443,10 +344,6 @@ export function Profile({ onBackToDashboard }) {
                           {userProfile.role?.replace("_", " ") || "user"}
                         </Badge>
                       </div>
-                      <div className="flex items-center justify-center sm:justify-start space-x-4 text-sm text-gray-600 mb-3">
-                        <span>{followers.length} Followers</span>
-                        <span>{following.length} Following</span>
-                      </div>
                       <p className="text-gray-700 mb-4 text-center sm:text-left">
                         {userProfile.bio || "No bio yet."}
                       </p>
@@ -457,7 +354,6 @@ export function Profile({ onBackToDashboard }) {
                   )}
                 </div>
               </div>
-              {/* Edit Profile Button */}
               {!editing && (
                 <div className="flex justify-center md:justify-start">
                   <Button
@@ -473,24 +369,19 @@ export function Profile({ onBackToDashboard }) {
           </CardContent>
         </Card>
 
-        {/* Tabbed Content Section */}
         <Tabs defaultValue="posts" className="w-full">
           <TabsList
             className={`grid w-full ${
               isLibraryStaff ? "grid-cols-2" : "grid-cols-3"
             }`}
           >
-            <TabsTrigger value="posts" className="text-xs md:text-sm">
+            <TabsTrigger value="posts">
               {isLibraryStaff ? "My Posts" : "Liked Posts"}
             </TabsTrigger>
             {!isLibraryStaff && (
-              <TabsTrigger value="reserved" className="text-xs md:text-sm">
-                Reserved
-              </TabsTrigger>
+              <TabsTrigger value="reserved">Reserved</TabsTrigger>
             )}
-            <TabsTrigger value="following" className="text-xs md:text-sm">
-              Following
-            </TabsTrigger>
+            <TabsTrigger value="liked">Liked Posts</TabsTrigger>
           </TabsList>
 
           <TabsContent value="posts">
@@ -503,12 +394,8 @@ export function Profile({ onBackToDashboard }) {
             </TabsContent>
           )}
 
-          <TabsContent value="following">
-            <FollowingList
-              following={following}
-              onUnfollow={handleUnfollow}
-              currentUserId={user.id}
-            />
+          <TabsContent value="liked">
+            <LikedPosts userProfile={userProfile} />
           </TabsContent>
         </Tabs>
       </div>
@@ -516,7 +403,7 @@ export function Profile({ onBackToDashboard }) {
   );
 }
 
-// Role-based Posts Component
+// Component to display posts based on user role
 function RoleBasedPosts({ userProfile }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -525,7 +412,7 @@ function RoleBasedPosts({ userProfile }) {
     fetchPosts();
   }, [userProfile]);
 
-  // Posts data fetch
+  // Fetch posts based on user role (library staff sees their own posts, others see liked posts)
   const fetchPosts = async () => {
     try {
       let data = [];
@@ -563,10 +450,8 @@ function RoleBasedPosts({ userProfile }) {
     }
   };
 
-  // Loading state
   if (loading) return <div className="text-center py-8">Loading posts...</div>;
 
-  // Empty state
   if (posts.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -577,15 +462,12 @@ function RoleBasedPosts({ userProfile }) {
     );
   }
 
-  // Posts grid display
   return (
     <div className="responsive-grid">
       {posts.map((post) => (
         <Card key={post.id} className="hover:shadow-lg transition-shadow">
           <CardContent className="p-4">
-            <h3 className="font-semibold mb-2 text-base md:text-lg">
-              {post.name}
-            </h3>
+            <h3 className="font-semibold mb-2">{post.name}</h3>
             <p className="text-sm text-gray-600 mb-2 line-clamp-2">
               {post.description}
             </p>
@@ -608,7 +490,7 @@ function RoleBasedPosts({ userProfile }) {
   );
 }
 
-// Reserved Spaces Component
+// Component to display user's reserved spaces
 function ReservedSpaces({ userProfile }) {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -617,7 +499,7 @@ function ReservedSpaces({ userProfile }) {
     fetchReservations();
   }, [userProfile]);
 
-  // Reservations data fetch
+  // Fetch user reservations from Supabase
   const fetchReservations = async () => {
     try {
       const { data, error } = await supabase
@@ -640,18 +522,15 @@ function ReservedSpaces({ userProfile }) {
     }
   };
 
-  // Loading state
   if (loading)
     return <div className="text-center py-8">Loading reservations...</div>;
 
-  // Empty state
   if (reservations.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">No reservations yet.</div>
     );
   }
 
-  // Reservations list display
   return (
     <div className="space-y-4">
       {reservations.map((reservation) => (
@@ -672,7 +551,7 @@ function ReservedSpaces({ userProfile }) {
                     />
                   )}
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-base md:text-lg truncate">
+                    <h3 className="font-semibold truncate">
                       {reservation.study_place?.name}
                     </h3>
                     <p className="text-sm text-gray-600 truncate">
@@ -710,291 +589,98 @@ function ReservedSpaces({ userProfile }) {
   );
 }
 
-// Following List Component
-function FollowingList({ following, onUnfollow, currentUserId }) {
-  const [followingUsers, setFollowingUsers] = useState([]);
+// Component to display user's liked posts
+function LikedPosts({ userProfile }) {
+  const [likedPosts, setLikedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchFollowingUsers();
-  }, [following]);
+    fetchLikedPosts();
+  }, [userProfile]);
 
-  // Following users data fetch
-  const fetchFollowingUsers = async () => {
+  // Fetch user's liked posts from Supabase
+  const fetchLikedPosts = async () => {
     try {
-      if (following.length === 0) {
-        setFollowingUsers([]);
-        setLoading(false);
-        return;
-      }
-
-      const userIds = following.map((f) => f.following_id);
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .in("id", userIds);
+      const { data: reactionsData, error } = await supabase
+        .from("reactions")
+        .select(
+          `
+          study_place_id,
+          study_places (*)
+        `
+        )
+        .eq("user_id", userProfile.id)
+        .eq("type", "like")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setFollowingUsers(data || []);
+
+      const posts =
+        reactionsData?.map((item) => item.study_places).filter(Boolean) || [];
+      setLikedPosts(posts);
     } catch (error) {
-      console.error("Error fetching following users:", error);
+      console.error("Error fetching liked posts:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Loading state
   if (loading)
-    return <div className="text-center py-8">Loading following...</div>;
+    return <div className="text-center py-8">Loading liked posts...</div>;
 
-  // Empty state
-  if (followingUsers.length === 0) {
+  if (likedPosts.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        You're not following anyone yet.
+        You haven't liked any posts yet.
       </div>
     );
   }
 
-  // Following users grid display
   return (
     <div className="responsive-grid">
-      {followingUsers.map((user) => (
-        <UserCard
-          key={user.id}
-          user={user}
-          onUnfollow={onUnfollow}
-          currentUserId={currentUserId}
-        />
-      ))}
-    </div>
-  );
-}
-
-// User Card Component for Following List
-function UserCard({ user, onUnfollow, currentUserId }) {
-  const isCurrentUser = user.id === currentUserId;
-
-  return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-center space-x-3 mb-3">
-          <Avatar className="flex-shrink-0">
-            <AvatarImage src={user.profile_picture_url} />
-            <AvatarFallback>
-              {user.name?.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm md:text-base truncate">
-              {user.name}
-            </h3>
-            <Badge variant="outline" className="capitalize text-xs">
-              {user.role?.replace("_", " ") || "user"}
-            </Badge>
-          </div>
-        </div>
-
-        {user.bio && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{user.bio}</p>
-        )}
-
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-          <Button size="sm" className="flex-1 justify-center">
-            <FaEnvelope className="w-3 h-3 mr-1" />
-            Message
-          </Button>
-          {!isCurrentUser && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onUnfollow(user.id)}
-              className="flex-1 justify-center"
-            >
-              Unfollow
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// User Click Card Component (replaced HoverCard)
-export function UserClickCard({ user, children, onMessageUser }) {
-  const { user: currentUser } = useAuth();
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState(user);
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (currentUser && user) {
-      checkIfFollowing();
-    }
-  }, [user, currentUser]);
-
-  // Follow status check
-  const checkIfFollowing = async () => {
-    if (!currentUser || !user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("followers")
-        .select("*")
-        .eq("follower_id", currentUser.id)
-        .eq("following_id", user.id)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        console.error("Error checking follow status:", error);
-        return;
-      }
-
-      setIsFollowing(!!data);
-    } catch (error) {
-      console.error("Error checking follow status:", error);
-    }
-  };
-
-  // Follow user handler
-  const handleFollow = async () => {
-    if (!currentUser || !user) return;
-
-    setLoading(true);
-    try {
-      const { error } = await supabase.from("followers").insert([
-        {
-          follower_id: currentUser.id,
-          following_id: user.id,
-        },
-      ]);
-
-      if (error) {
-        if (error.code === "23505") {
-          setIsFollowing(true);
-        } else {
-          throw error;
-        }
-      } else {
-        setIsFollowing(true);
-      }
-    } catch (error) {
-      console.error("Error following user:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Unfollow user handler
-  const handleUnfollow = async () => {
-    if (!currentUser || !user) return;
-
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from("followers")
-        .delete()
-        .eq("follower_id", currentUser.id)
-        .eq("following_id", user.id);
-
-      if (error) throw error;
-
-      setIsFollowing(false);
-    } catch (error) {
-      console.error("Error unfollowing user:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Message user handler
-  const handleMessageUser = () => {
-    if (onMessageUser && user) {
-      onMessageUser(user);
-    }
-    setIsOpen(false);
-  };
-
-  const isCurrentUser = currentUser?.id === user?.id;
-
-  return (
-    <div className="relative">
-      <div
-        className="cursor-pointer inline-flex items-center space-x-2 p-2 rounded hover:bg-gray-100 touch-target"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <Avatar className="w-6 h-6">
-          <AvatarImage src={userData?.profile_picture_url} />
-          <AvatarFallback className="text-xs">
-            {userData?.name?.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <span className="font-medium text-sm hover:text-blue-600 truncate">
-          {userData?.name}
-        </span>
-      </div>
-
-      {isOpen && (
-        <div className="absolute z-50 w-80 max-w-[90vw] bg-white border border-gray-200 rounded-lg shadow-lg p-4 mt-2">
-          <div className="flex justify-between space-x-4">
-            <Avatar className="w-16 h-16 flex-shrink-0">
-              <AvatarImage src={userData?.profile_picture_url} />
-              <AvatarFallback className="text-lg">
-                {userData?.name?.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="space-y-2 flex-1 min-w-0">
-              <div className="flex items-center space-x-2">
-                <h4 className="text-sm font-semibold truncate">
-                  {userData?.name}
-                </h4>
-                <Badge
-                  variant="outline"
-                  className="capitalize text-xs flex-shrink-0"
-                >
-                  {userData?.role?.replace("_", " ") || "user"}
-                </Badge>
-              </div>
-              <p className="text-sm text-gray-600 line-clamp-2">
-                {userData?.bio || "No bio yet."}
-              </p>
-
-              {/* Profile Stats Section */}
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>{userData?.follower_count || 0} followers</span>
-                <span>{userData?.following_count || 0} following</span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center pt-1 space-y-2 sm:space-y-0 sm:space-x-2">
-                <Button
-                  size="sm"
-                  className="flex-1 w-full sm:w-auto"
-                  onClick={handleMessageUser}
-                >
-                  <FaEnvelope className="w-3 h-3 mr-1" />
-                  Message
-                </Button>
-                {!isCurrentUser && (
-                  <Button
-                    size="sm"
-                    variant={isFollowing ? "outline" : "default"}
-                    onClick={isFollowing ? handleUnfollow : handleFollow}
-                    disabled={loading}
-                    className="flex-1 w-full sm:w-auto"
-                  >
-                    {loading
-                      ? "Loading..."
-                      : isFollowing
-                      ? "Unfollow"
-                      : "Follow"}
-                  </Button>
-                )}
+      {likedPosts.map((post) => (
+        <Card key={post.id} className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">{post.name}</h3>
+              <div className="flex items-center text-red-500">
+                <FaHeart className="w-4 h-4 mr-1" />
+                <span className="text-sm">Liked</span>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+              {post.description}
+            </p>
+            <div className="flex items-center text-sm text-gray-500">
+              <FaMapMarkerAlt className="w-4 h-4 mr-1 flex-shrink-0" />
+              <span className="truncate">{post.location}</span>
+            </div>
+            {post.image_url && (
+              <img
+                src={post.image_url}
+                alt={post.name}
+                className="w-full h-32 object-cover rounded mt-3"
+                loading="lazy"
+              />
+            )}
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="flex items-center text-sm text-gray-500">
+                <span className="flex items-center">
+                  <FaHeart className="w-3 h-3 mr-1 text-red-500" />
+                  Status:{" "}
+                  <span
+                    className={`ml-1 font-medium ${
+                      post.is_available ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {post.is_available ? "Available" : "Unavailable"}
+                  </span>
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

@@ -1,11 +1,9 @@
-// src/dashboard.jsx
 import { useEffect, useState } from "react";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./lib/supabase";
 import { StudyPlaceCard } from "./components/StudyPlaceCard";
 import { Sidebar } from "./components/Sidebar";
 import { Profile } from "./components/Profile";
-import { FollowingFeed } from "./components/FollowingFeed";
 import { ReservedView } from "./components/ReservedView";
 import { Messages } from "./components/Messages";
 import {
@@ -23,6 +21,7 @@ import educationImg from "/books.svg";
 import { format } from "date-fns";
 
 function Dashboard() {
+  // Authentication and user state
   const { user, signOut } = useAuth();
   const [userProfile, setUserProfile] = useState(null);
   const [studyPlaces, setStudyPlaces] = useState([]);
@@ -34,11 +33,11 @@ function Dashboard() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [error, setError] = useState(null);
 
+  // View and navigation state
   const [currentView, setCurrentView] = useState("dashboard");
-  const [followingPosts, setFollowingPosts] = useState([]);
-  const [followingLoading, setFollowingLoading] = useState(false);
   const [reservedCount, setReservedCount] = useState(0);
 
+  // Modal states
   const [postModalOpen, setPostModalOpen] = useState(false);
   const [reserveModalOpen, setReserveModalOpen] = useState(false);
   const [editReservationModalOpen, setEditReservationModalOpen] =
@@ -47,6 +46,7 @@ function Dashboard() {
   const [approvalsModalOpen, setApprovalsModalOpen] = useState(false);
   const [reservationsModalOpen, setReservationsModalOpen] = useState(false);
 
+  // UI and interaction state
   const [uploading, setUploading] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedReservation, setSelectedReservation] = useState(null);
@@ -55,6 +55,7 @@ function Dashboard() {
   const [reactions, setReactions] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Form data state
   const [newPost, setNewPost] = useState({
     name: "",
     description: "",
@@ -68,10 +69,10 @@ function Dashboard() {
     endTime: "10:00",
   });
 
-  // Mobile state
+  // Responsive state
   const [isMobile, setIsMobile] = useState(false);
 
-  // Mobile detection
+  // Effect for responsive design
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -81,7 +82,7 @@ function Dashboard() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Initial data load
+  // Effect for initial data loading
   useEffect(() => {
     if (user) {
       fetchUserProfile();
@@ -91,7 +92,7 @@ function Dashboard() {
     }
   }, [user]);
 
-  // Library staff data
+  // Effect for library staff specific data
   useEffect(() => {
     if (userProfile?.role === "library_staff") {
       fetchPendingApprovals();
@@ -99,7 +100,7 @@ function Dashboard() {
     }
   }, [userProfile]);
 
-  // User profile fetch
+  // Data fetching functions
   const fetchUserProfile = async () => {
     try {
       if (!user) return;
@@ -116,7 +117,6 @@ function Dashboard() {
     }
   };
 
-  // Study places fetch
   const fetchStudyPlaces = async () => {
     try {
       const { data: placesData, error } = await supabase
@@ -133,6 +133,7 @@ function Dashboard() {
       if (error) throw error;
       setStudyPlaces(placesData || []);
 
+      // Fetch reactions for each study place
       const reactionsObj = {};
       if (placesData && user) {
         const userReactionsPromises = placesData.map(async (place) => {
@@ -186,140 +187,6 @@ function Dashboard() {
     }
   };
 
-  // Following posts fetch
-  const fetchFollowingPosts = async () => {
-    if (!user) {
-      console.log("No user found");
-      return;
-    }
-
-    setFollowingLoading(true);
-    try {
-      const { data: followingData, error: followingError } = await supabase
-        .from("followers")
-        .select("following_id")
-        .eq("follower_id", user.id);
-
-      if (followingError) {
-        console.error("Error fetching followers:", followingError);
-        throw followingError;
-      }
-
-      if (!followingData || followingData.length === 0) {
-        setFollowingPosts([]);
-        setFollowingLoading(false);
-        return;
-      }
-
-      const followingIds = followingData
-        .map((f) => f.following_id)
-        .filter((id) => id && id !== "null" && id !== "undefined");
-
-      if (followingIds.length === 0) {
-        setFollowingPosts([]);
-        setFollowingLoading(false);
-        return;
-      }
-
-      const { data: postsData, error: postsError } = await supabase
-        .from("study_places")
-        .select("*")
-        .in("created_by", followingIds)
-        .order("created_at", { ascending: false });
-
-      if (postsError) {
-        console.error("Error fetching study places:", postsError);
-        throw postsError;
-      }
-
-      if (!postsData || postsData.length === 0) {
-        setFollowingPosts([]);
-        setFollowingLoading(false);
-        return;
-      }
-
-      const creatorIds = [...new Set(postsData.map((post) => post.created_by))];
-
-      const { data: creatorsData, error: creatorsError } = await supabase
-        .from("users")
-        .select("id, name, profile_picture_url, role, bio")
-        .in("id", creatorIds);
-
-      if (creatorsError) {
-        console.error("Error fetching creators:", creatorsError);
-        throw creatorsError;
-      }
-
-      const enrichedPosts = postsData.map((post) => {
-        const creator = creatorsData?.find(
-          (user) => user.id === post.created_by
-        );
-        return {
-          ...post,
-          creator: creator || {
-            id: post.created_by,
-            name: "Unknown User",
-            profile_picture_url: null,
-            role: "user",
-            bio: null,
-          },
-        };
-      });
-
-      setFollowingPosts(enrichedPosts);
-
-      const reactionsObj = {};
-      const userReactionsPromises = enrichedPosts.map(async (place) => {
-        try {
-          const { count: likesCount, error: likesError } = await supabase
-            .from("reactions")
-            .select("id", { count: "exact", head: true })
-            .eq("study_place_id", place.id)
-            .eq("type", "like");
-
-          const { data: userLike, error: userLikeError } = await supabase
-            .from("reactions")
-            .select("id")
-            .eq("study_place_id", place.id)
-            .eq("user_id", user.id)
-            .eq("type", "like")
-            .maybeSingle();
-
-          const { count: commentsCount, error: commentsError } = await supabase
-            .from("comments")
-            .select("id", { count: "exact", head: true })
-            .eq("study_place_id", place.id);
-
-          reactionsObj[place.id] = {
-            likes: likesError ? 0 : likesCount || 0,
-            comments: commentsError ? 0 : commentsCount || 0,
-            userLiked: !userLikeError && !!userLike,
-          };
-        } catch (err) {
-          console.error(
-            `Error processing reactions for place ${place.id}:`,
-            err
-          );
-          reactionsObj[place.id] = {
-            likes: 0,
-            comments: 0,
-            userLiked: false,
-          };
-        }
-      });
-
-      await Promise.all(userReactionsPromises);
-      setReactions((prev) => ({ ...prev, ...reactionsObj }));
-    } catch (error) {
-      console.error("Detailed error in fetchFollowingPosts:", error);
-      setError("Failed to load posts from followed users: " + error.message);
-      setFollowingPosts([]);
-    } finally {
-      setFollowingLoading(false);
-    }
-  };
-
-  // Reservations fetch
   const fetchReservations = async () => {
     try {
       if (!user) return;
@@ -346,7 +213,6 @@ function Dashboard() {
     }
   };
 
-  // Reserved count fetch
   const fetchReservedCount = async () => {
     try {
       if (!user) return;
@@ -363,7 +229,6 @@ function Dashboard() {
     }
   };
 
-  // Pending approvals fetch
   const fetchPendingApprovals = async () => {
     try {
       if (!user) return;
@@ -390,7 +255,6 @@ function Dashboard() {
     }
   };
 
-  // User reservations fetch
   const fetchUserReservations = async () => {
     try {
       if (!user) return;
@@ -417,7 +281,6 @@ function Dashboard() {
     }
   };
 
-  // Comments fetch
   const fetchComments = async (studyPlaceId) => {
     try {
       const { data, error } = await supabase
@@ -445,17 +308,6 @@ function Dashboard() {
 
   const handleHomeClick = () => {
     setCurrentView("dashboard");
-  };
-
-  const handleFollowingClick = () => {
-    const isStudentOrTeacher =
-      userProfile?.role === "student" || userProfile?.role === "teacher";
-    if (isStudentOrTeacher) {
-      setCurrentView("following");
-      fetchFollowingPosts();
-    } else {
-      setCurrentView("dashboard");
-    }
   };
 
   const handleReservedClick = () => {
@@ -648,7 +500,7 @@ function Dashboard() {
     }
   };
 
-  // Post management handlers
+  // Study place management handlers
   const handleToggleAvailability = async (placeId, currentStatus) => {
     try {
       const { error } = await supabase
@@ -665,9 +517,6 @@ function Dashboard() {
       );
       setTimeout(() => setSuccessMessage(""), 3000);
       fetchStudyPlaces();
-      if (currentView === "following") {
-        fetchFollowingPosts();
-      }
     } catch (error) {
       console.error("Error toggling availability:", error);
     }
@@ -695,9 +544,6 @@ function Dashboard() {
       fetchReservations();
       fetchUserReservations();
       fetchReservedCount();
-      if (currentView === "following") {
-        fetchFollowingPosts();
-      }
     } catch (error) {
       console.error("Error deleting post:", error);
       setSuccessMessage("Error deleting post. Please try again.");
@@ -722,9 +568,6 @@ function Dashboard() {
       setSuccessMessage("Comment added successfully!");
       setTimeout(() => setSuccessMessage(""), 2000);
       fetchStudyPlaces();
-      if (currentView === "following") {
-        fetchFollowingPosts();
-      }
     } catch (error) {
       console.error("Error adding comment:", error);
     }
@@ -779,15 +622,12 @@ function Dashboard() {
       }
 
       fetchStudyPlaces();
-      if (currentView === "following") {
-        fetchFollowingPosts();
-      }
     } catch (error) {
       console.error("Error handling like:", error);
     }
   };
 
-  // Post creation handlers
+  // Post creation handler
   const handleCreatePost = async (e) => {
     e.preventDefault();
     if (!userProfile || userProfile.role !== "library_staff" || !user) return;
@@ -832,9 +672,6 @@ function Dashboard() {
       setSuccessMessage("Study place created successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
       fetchStudyPlaces();
-      if (currentView === "following") {
-        fetchFollowingPosts();
-      }
     } catch (error) {
       console.error("Error creating study place:", error);
       setSuccessMessage("Error creating study place. Please try again.");
@@ -844,6 +681,7 @@ function Dashboard() {
     }
   };
 
+  // Form change handlers
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -859,7 +697,7 @@ function Dashboard() {
     setReservationData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Auth handler
+  // Authentication handler
   const handleSignOut = async () => {
     try {
       setSigningOut(true);
@@ -884,7 +722,7 @@ function Dashboard() {
   const isStudentOrTeacher =
     userProfile?.role === "student" || userProfile?.role === "teacher";
 
-  // Skeleton component
+  // Skeleton loader component
   const StudyPlaceSkeleton = () => (
     <div className="responsive-card">
       <div className="p-4 flex items-center space-x-3">
@@ -916,7 +754,7 @@ function Dashboard() {
     </div>
   );
 
-  // Error state
+  // Error boundary
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -929,15 +767,17 @@ function Dashboard() {
     );
   }
 
+  // Main render
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+      {/* Success message toast */}
       {successMessage && (
         <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-in slide-in-from-right">
           {successMessage}
         </div>
       )}
 
-      {/* Desktop Sidebar */}
+      {/* Desktop sidebar */}
       {!isMobile && (
         <Sidebar
           userProfile={userProfile}
@@ -952,7 +792,6 @@ function Dashboard() {
           onSettingsToggle={() => setSettingsOpen(!settingsOpen)}
           onProfileClick={handleProfileClick}
           onHomeClick={handleHomeClick}
-          onFollowingClick={handleFollowingClick}
           onReservedClick={handleReservedClick}
           currentView={currentView}
           settingsOpen={settingsOpen}
@@ -962,31 +801,16 @@ function Dashboard() {
         />
       )}
 
-      {/* Main Content */}
+      {/* Main content area */}
       <div
         className={`flex-1 flex flex-col ${
           !isMobile ? "md:ml-64" : ""
         } mobile-safe-area`}
       >
         <main className="flex-1 p-4 sm:p-6 relative">
+          {/* Conditional rendering based on current view */}
           {currentView === "profile" ? (
             <Profile onBackToDashboard={handleHomeClick} />
-          ) : currentView === "following" ? (
-            <FollowingFeed
-              posts={followingPosts}
-              loading={followingLoading}
-              userProfile={userProfile}
-              reactions={reactions}
-              onReserve={handleReserveClick}
-              onEditReservation={handleEditReservation}
-              onToggleAvailability={handleToggleAvailability}
-              onLike={handleLike}
-              onViewComments={handleViewComments}
-              onDeletePost={handleDeletePost}
-              getUserReservation={getUserReservation}
-              isStudentOrTeacher={isStudentOrTeacher}
-              onRefresh={fetchFollowingPosts}
-            />
           ) : currentView === "reserved" ? (
             <ReservedView
               user={user}
@@ -997,6 +821,7 @@ function Dashboard() {
             <Messages onBackToDashboard={handleHomeClick} />
           ) : (
             <>
+              {/* Loading state */}
               {loading ? (
                 <div className="responsive-grid">
                   {[...Array(6)].map((_, index) => (
@@ -1004,8 +829,10 @@ function Dashboard() {
                   ))}
                 </div>
               ) : (
+                /* Study places grid */
                 <div className="responsive-grid">
                   {studyPlaces.length === 0 ? (
+                    /* Empty state */
                     <div className="col-span-full text-center py-12">
                       <img
                         src={educationImg}
@@ -1023,6 +850,7 @@ function Dashboard() {
                       )}
                     </div>
                   ) : (
+                    /* Study place cards */
                     studyPlaces.map((place) => {
                       const userReservation = getUserReservation(place.id);
                       const canReserve =
@@ -1052,7 +880,7 @@ function Dashboard() {
             </>
           )}
 
-          {/* Floating Action Button */}
+          {/* Floating messages button */}
           <Button
             onClick={handleMessagesClick}
             className={`fixed ${
@@ -1065,7 +893,7 @@ function Dashboard() {
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile sidebar */}
       {isMobile && (
         <Sidebar
           userProfile={userProfile}
@@ -1080,7 +908,6 @@ function Dashboard() {
           onSettingsToggle={() => setSettingsOpen(!settingsOpen)}
           onProfileClick={handleProfileClick}
           onHomeClick={handleHomeClick}
-          onFollowingClick={handleFollowingClick}
           onReservedClick={handleReservedClick}
           currentView={currentView}
           settingsOpen={settingsOpen}
@@ -1090,7 +917,7 @@ function Dashboard() {
         />
       )}
 
-      {/* Modals */}
+      {/* Modal components */}
       <PostModal
         open={postModalOpen}
         onOpenChange={setPostModalOpen}

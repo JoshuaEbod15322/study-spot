@@ -1,6 +1,5 @@
 import {
   FaHome,
-  FaHeart,
   FaMapMarkerAlt,
   FaUser,
   FaCog,
@@ -9,7 +8,6 @@ import {
   FaPlus,
   FaClock,
   FaCalendarAlt,
-  FaUsers,
   FaBookmark,
 } from "react-icons/fa";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +22,6 @@ export function Sidebar({
   onSettingsToggle,
   onProfileClick,
   onHomeClick,
-  onFollowingClick,
   onReservedClick,
   currentView,
   settingsOpen,
@@ -53,21 +50,6 @@ export function Sidebar({
             <FaHome className="w-5 h-5 mb-1" />
             <span className="text-xs truncate">Home</span>
           </button>
-
-          {/* Following navigation button */}
-          {isStudentOrTeacher && (
-            <button
-              onClick={onFollowingClick}
-              className={`flex flex-col items-center justify-center p-2 transition-colors flex-1 min-w-0 ${
-                currentView === "following"
-                  ? "text-red-600"
-                  : "text-gray-600 hover:text-red-600"
-              }`}
-            >
-              <FaUsers className="w-5 h-5 mb-1" />
-              <span className="text-xs truncate">Following</span>
-            </button>
-          )}
 
           {/* Reserved navigation button */}
           {!isLibraryStaff && (
@@ -212,32 +194,9 @@ export function Sidebar({
                     : "group-hover:text-blue-700"
                 }`}
               />
-              <span className="font-medium">All Posts</span>
+              <span className="font-medium">Dashboard</span>
             </button>
           </li>
-
-          {/* Following feed navigation */}
-          {isStudentOrTeacher && (
-            <li>
-              <button
-                onClick={onFollowingClick}
-                className={`flex items-center space-x-3 px-3 py-2 rounded-lg w-full text-left group ${
-                  currentView === "following"
-                    ? "bg-red-50 text-red-600"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                <FaUsers
-                  className={`w-5 h-5 ${
-                    currentView === "following"
-                      ? "text-red-600"
-                      : "group-hover:text-red-500"
-                  }`}
-                />
-                <span>Following</span>
-              </button>
-            </li>
-          )}
 
           {/* Reserved places navigation */}
           {!isLibraryStaff && (

@@ -1,12 +1,10 @@
-// src/components/MobileBottomNav.jsx
-import { FaHome, FaUsers, FaBookmark, FaUser, FaPlus } from "react-icons/fa";
+import { FaHome, FaBookmark, FaUser, FaPlus } from "react-icons/fa";
 import { Badge } from "@/components/ui/badge";
 
 export function MobileBottomNav({
   userProfile,
   currentView,
   onHomeClick,
-  onFollowingClick,
   onReservedClick,
   onProfileClick,
   onPost,
@@ -31,21 +29,6 @@ export function MobileBottomNav({
           <FaHome className="w-5 h-5 mb-1" />
           <span className="text-xs truncate">Home</span>
         </button>
-
-        {/* Following Button - Only for Students/Teachers */}
-        {isStudentOrTeacher && (
-          <button
-            onClick={onFollowingClick}
-            className={`flex flex-col items-center justify-center p-2 transition-colors flex-1 min-w-0 ${
-              currentView === "following"
-                ? "text-red-600"
-                : "text-gray-600 hover:text-red-600"
-            }`}
-          >
-            <FaUsers className="w-5 h-5 mb-1" />
-            <span className="text-xs truncate">Following</span>
-          </button>
-        )}
 
         {/* Reserved Button - Only for Students/Teachers */}
         {!isLibraryStaff && (
