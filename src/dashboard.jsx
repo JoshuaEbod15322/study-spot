@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { FaComment, FaSpinner } from "react-icons/fa";
 import educationImg from "/books.svg";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import "./responsive.css";
 
 function Dashboard() {
@@ -71,6 +72,9 @@ function Dashboard() {
 
   // Responsive state
   const [isMobile, setIsMobile] = useState(false);
+
+  // Navigation
+  const navigate = useNavigate();
 
   // Effect for responsive design
   useEffect(() => {
@@ -720,11 +724,18 @@ function Dashboard() {
 
   // Authentication handler
   const handleSignOut = async () => {
+    setSigningOut(true);
     try {
-      setSigningOut(true);
-      await signOut();
+      const { error } = await signOut();
+
+      if (error) {
+        console.warn("Sign out completed with warning:", error.message);
+      }
+
+      navigate("/login", { replace: true });
     } catch (error) {
-      console.error("Error signing out:", error);
+      console.error("Unexpected error during sign out:", error);
+      navigate("/login", { replace: true });
     } finally {
       setSigningOut(false);
     }
