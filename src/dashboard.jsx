@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { FaComment, FaSpinner } from "react-icons/fa";
 import educationImg from "/books.svg";
 import { format } from "date-fns";
+import "./responsive.css";
 
 function Dashboard() {
   // Authentication and user state

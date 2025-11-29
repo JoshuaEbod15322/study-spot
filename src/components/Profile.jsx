@@ -25,6 +25,7 @@ import {
   FaTrash,
   FaHeart,
 } from "react-icons/fa";
+import "../responsive.css";
 
 // Main profile component with user information and editing capabilities
 export function Profile({ onBackToDashboard }) {

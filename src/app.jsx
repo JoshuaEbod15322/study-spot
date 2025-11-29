@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./login.jsx";
 import Signup from "./signup.jsx";
 import Dashboard from "./dashboard.jsx";
-import "./responsive.css";
+import "./responsive.css"; // Already present
 import { AuthProvider, useAuth } from "./contexts/AuthContext.jsx";
 
 function ProtectedRoute({ children }) {

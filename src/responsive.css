@@ -1,5 +1,3 @@
-/* Optimized Responsive CSS with Performance Improvements */
-
 /* Modal styles */
 .responsive-modal {
   width: 95vw;
@@ -220,7 +218,7 @@
 .aspect-ratio-box {
   position: relative;
   width: 100%;
-  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+  padding-top: 56.25%;
 }
 
 .aspect-ratio-box img {
@@ -328,14 +326,12 @@
   }
 }
 
-/* Focus styles for accessibility */
 .responsive-button:focus-visible,
 .responsive-action-btn:focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -350,7 +346,6 @@
   }
 }
 
-/* High contrast mode support */
 @media (prefers-contrast: high) {
   .responsive-card {
     border: 1px solid currentColor;
@@ -361,7 +356,6 @@
   }
 }
 
-/* Container queries support */
 @container (min-width: 400px) {
   .responsive-card {
     display: flex;
@@ -371,5 +365,126 @@
   .responsive-image {
     width: 40%;
     height: 200px;
+  }
+}
+
+.mobile-safe-area {
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Study place card responsive improvements */
+@media (max-width: 640px) {
+  .study-place-card {
+    min-height: 420px;
+  }
+
+  .study-place-card img {
+    height: 160px;
+  }
+}
+
+/* Profile page responsive improvements */
+@media (max-width: 768px) {
+  .profile-avatar-section {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .profile-actions {
+    justify-content: center;
+    margin-top: 1rem;
+  }
+}
+
+/* Messages responsive improvements */
+@media (max-width: 768px) {
+  .messages-container {
+    height: calc(100vh - 120px);
+  }
+
+  .message-input {
+    padding-bottom: 80px;
+  }
+}
+
+/* Modal responsive improvements */
+@media (max-width: 640px) {
+  .responsive-modal {
+    margin: 0;
+    border-radius: 0;
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+  }
+}
+
+/* Touch improvements for all interactive elements */
+button,
+[role="button"],
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+/* Prevent zoom on focus for mobile */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* Prevents zoom on focus */
+  }
+}
+
+/* Loading states for better perceived performance */
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .sidebar,
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .responsive-card {
+    border: 2px solid currentColor;
+  }
+
+  .responsive-button {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

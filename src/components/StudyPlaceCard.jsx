@@ -9,6 +9,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
+import "../responsive.css";
 
 const StudyPlaceCard = memo(
   ({

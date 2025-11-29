@@ -1,5 +1,6 @@
 import { FaHome, FaBookmark, FaUser, FaPlus } from "react-icons/fa";
 import { Badge } from "@/components/ui/badge";
+import "../responsive.css";
 
 export function MobileBottomNav({
   userProfile,

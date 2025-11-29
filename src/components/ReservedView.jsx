@@ -1,4 +1,3 @@
-// src/components/ReservedView.jsx
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import "../responsive.css";
 
 export function ReservedView({ user, onBackToDashboard, userProfile }) {
   const [reservedPlaces, setReservedPlaces] = useState([]);

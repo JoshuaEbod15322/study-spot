@@ -31,6 +31,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { format } from "date-fns";
+import "../responsive.css";
 
 // Generate time options from 8:00 to 20:00 in 30-minute intervals
 const timeOptions = [];
