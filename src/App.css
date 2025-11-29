@@ -33,27 +33,6 @@
   content-visibility: auto;
 }
 
-.login-image::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("education.png");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  opacity: 0;
-  transition: opacity 0.25s ease-in-out;
-  pointer-events: none;
-}
-
-.login-image:hover img {
-  opacity: 0;
-}
-
-.login-image:hover::after {
-  opacity: 1;
-}
-
 @media (max-width: 767px) {
   .login-image {
     display: none;
@@ -79,7 +58,6 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Critical above-the-fold styles */
 .critical-load {
   opacity: 1 !important;
   transform: none !important;
