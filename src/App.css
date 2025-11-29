@@ -48,7 +48,6 @@
   margin: 0;
 }
 
-/* Performance optimizations */
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
