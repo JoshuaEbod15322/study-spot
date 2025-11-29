@@ -23,6 +23,7 @@ const StudyPlaceCard = memo(
     onLike,
     onViewComments,
     onDeletePost,
+    isLcp = false,
   }) => {
     // Memoize expensive calculations
     const placeReactions = useMemo(
@@ -54,11 +55,28 @@ const StudyPlaceCard = memo(
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
 
-    // Optimize image URL
+    // Optimize image URL (especially Supabase images) to reduce LCP weight
     const optimizedImageUrl = useMemo(() => {
       if (!place.image_url || imageError) return null;
-      // Add image optimization parameters if using an image service
-      return place.image_url;
+
+      try {
+        const url = new URL(place.image_url);
+
+        // Basic Supabase image optimization using transformation params
+        if (url.hostname.includes("supabase.co")) {
+          // Target a reasonable size for card images to cut transfer size
+          url.searchParams.set("width", "800");
+          url.searchParams.set("quality", "70");
+          url.searchParams.set("resize", "contain");
+          // Prefer webp when supported; browsers that don't support it will ignore
+          url.searchParams.set("format", "webp");
+          return url.toString();
+        }
+
+        return place.image_url;
+      } catch {
+        return place.image_url;
+      }
     }, [place.image_url, imageError]);
 
     return (
@@ -97,7 +115,8 @@ const StudyPlaceCard = memo(
               className={`w-full h-48 object-cover transition-opacity duration-300 ${
                 imageLoaded ? "opacity-100" : "opacity-0"
               }`}
-              loading="lazy"
+              loading={isLcp ? "eager" : "lazy"}
+              fetchpriority={isLcp ? "high" : "auto"}
               width="400"
               height="192"
               onLoad={() => setImageLoaded(true)}

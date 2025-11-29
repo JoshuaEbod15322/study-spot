@@ -11,3 +11,14 @@ createRoot(document.getElementById("root")).render(
     </BrowserRouter>
   </StrictMode>
 );
+
+// Register PWA service worker after initial load to avoid render-blocking
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    import("virtual:pwa-register").then(({ registerSW }) => {
+      registerSW({
+        immediate: false,
+      });
+    });
+  });
+}

@@ -864,7 +864,7 @@ function Dashboard() {
                     </div>
                   ) : (
                     /* Study place cards */
-                    studyPlaces.map((place) => {
+                    studyPlaces.map((place, index) => {
                       const userReservation = getUserReservation(place.id);
                       const canReserve =
                         isStudentOrTeacher &&
@@ -874,6 +874,7 @@ function Dashboard() {
                       return (
                         <StudyPlaceCard
                           key={place.id}
+                          isLcp={index === 0}
                           place={place}
                           userProfile={userProfile}
                           userReservation={userReservation}
