@@ -710,28 +710,21 @@ export function ReservationsModal({
   const handleDelete = async (reservationId) => {
     setDeletingId(reservationId);
     try {
-      // Update local state immediately for instant UI feedback
       setLocalReservations((prev) =>
         prev.filter((reservation) => reservation.id !== reservationId)
       );
 
-      // Call the delete function and wait for it to complete
       const result = await onDeleteReservation(reservationId);
 
-      // Always refresh after deletion to ensure we have the latest data
       if (onRefresh) {
         await onRefresh();
-        // After refresh, sync local state with updated props
-        // The useEffect will also handle this, but we do it here too for immediate update
       }
 
-      // If deletion failed, the refresh above will restore the correct state
       if (result && !result.success) {
         console.error("Failed to delete reservation:", result.error);
       }
     } catch (error) {
       console.error("Error deleting reservation:", error);
-      // On error, refresh to restore correct state
       if (onRefresh) {
         await onRefresh();
       }
