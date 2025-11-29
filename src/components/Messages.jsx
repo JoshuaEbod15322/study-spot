@@ -1,15 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  FaPaperPlane,
-  FaUser,
-  FaComment,
-  FaBars,
-  FaArrowLeft,
-} from "react-icons/fa";
+import { FaPaperPlane, FaUser, FaComment, FaArrowLeft } from "react-icons/fa";
 import "../responsive.css";
 
 export function Messages({ onBackToDashboard }) {
@@ -148,10 +142,10 @@ export function Messages({ onBackToDashboard }) {
     }
   };
 
-  const handleBackToUserList = () => {
+  const handleBackToUserList = useCallback(() => {
     setShowUserList(true);
     setSelectedUser(null);
-  };
+  }, []);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedUser || !user || !conversation) {
@@ -181,12 +175,99 @@ export function Messages({ onBackToDashboard }) {
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+  const handleKeyPress = useCallback(
+    (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    },
+    [newMessage, selectedUser, user, conversation]
+  );
+
+  //user list items
+  const userListItems = useMemo(() => {
+    return users.map((userItem) => {
+      const isSelected = selectedUser?.id === userItem.id;
+
+      return (
+        <div
+          key={userItem.id}
+          className={`p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+            isSelected ? "bg-blue-50 border-r-2 border-blue-500" : ""
+          }`}
+          onClick={() => handleSelectUser(userItem)}
+        >
+          <div className="flex items-center space-x-3">
+            {userItem.profile_picture_url ? (
+              <img
+                src={userItem.profile_picture_url}
+                alt={userItem.name}
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                <FaUser className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">
+                {userItem.name}
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">
+                {userItem.role || "User"}
+              </p>
+              {userItem.bio && (
+                <p className="text-xs text-gray-400 truncate mt-1 hidden sm:block">
+                  {userItem.bio}
+                </p>
+              )}
+            </div>
+            <div className="flex-shrink-0">
+              <FaComment className="w-4 h-4 text-gray-400" />
+            </div>
+          </div>
+        </div>
+      );
+    });
+  }, [users, selectedUser]);
+
+  //message items
+  const messageItems = useMemo(() => {
+    return messages.map((message) => (
+      <div
+        key={message.id}
+        className={`flex ${
+          message.sender_id === user.id ? "justify-end" : "justify-start"
+        }`}
+      >
+        <div
+          className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 py-2 sm:px-4 sm:py-2 rounded-lg ${
+            message.sender_id === user.id
+              ? "bg-blue-600 text-white"
+              : "bg-white border border-gray-200 text-gray-900"
+          }`}
+        >
+          <p className="text-sm break-words">{message.content}</p>
+          <div className="flex items-center justify-end space-x-1 mt-1">
+            <span
+              className={`text-xs ${
+                message.sender_id === user.id
+                  ? "text-blue-200"
+                  : "text-gray-500"
+              }`}
+            >
+              {new Date(message.created_at).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          </div>
+        </div>
+      </div>
+    ));
+  }, [messages, user]);
 
   // Error state
   if (error) {
@@ -283,51 +364,7 @@ export function Messages({ onBackToDashboard }) {
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
-                    {users.map((userItem) => {
-                      const isSelected = selectedUser?.id === userItem.id;
-
-                      return (
-                        <div
-                          key={userItem.id}
-                          className={`p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                            isSelected
-                              ? "bg-blue-50 border-r-2 border-blue-500"
-                              : ""
-                          }`}
-                          onClick={() => handleSelectUser(userItem)}
-                        >
-                          <div className="flex items-center space-x-3">
-                            {userItem.profile_picture_url ? (
-                              <img
-                                src={userItem.profile_picture_url}
-                                alt={userItem.name}
-                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                                <FaUser className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">
-                                {userItem.name}
-                              </h3>
-                              <p className="text-xs sm:text-sm text-gray-500 truncate">
-                                {userItem.role || "User"}
-                              </p>
-                              {userItem.bio && (
-                                <p className="text-xs text-gray-400 truncate mt-1 hidden sm:block">
-                                  {userItem.bio}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex-shrink-0">
-                              <FaComment className="w-4 h-4 text-gray-400" />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {userListItems}
                   </div>
                 )}
               </div>
@@ -354,6 +391,7 @@ export function Messages({ onBackToDashboard }) {
                       src={selectedUser.profile_picture_url}
                       alt={selectedUser.name}
                       className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex items-center justify-center">
@@ -383,43 +421,7 @@ export function Messages({ onBackToDashboard }) {
                     </p>
                   </div>
                 ) : (
-                  messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${
-                        message.sender_id === user.id
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 py-2 sm:px-4 sm:py-2 rounded-lg ${
-                          message.sender_id === user.id
-                            ? "bg-blue-600 text-white"
-                            : "bg-white border border-gray-200 text-gray-900"
-                        }`}
-                      >
-                        <p className="text-sm break-words">{message.content}</p>
-                        <div className="flex items-center justify-end space-x-1 mt-1">
-                          <span
-                            className={`text-xs ${
-                              message.sender_id === user.id
-                                ? "text-blue-200"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {new Date(message.created_at).toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              }
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                  messageItems
                 )}
               </div>
 

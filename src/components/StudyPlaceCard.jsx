@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useState, useMemo } from "react";
 import {
   FaUser,
   FaMapMarkerAlt,
@@ -24,24 +24,42 @@ const StudyPlaceCard = memo(
     onViewComments,
     onDeletePost,
   }) => {
-    // User role checks
-    const isStudentOrTeacher =
-      userProfile?.role === "student" || userProfile?.role === "teacher";
-    const canReserve =
-      isStudentOrTeacher && place.is_available && !userReservation;
-    const isLibraryStaff = userProfile?.role === "library_staff";
-    const isOwner = isLibraryStaff && place.created_by === userProfile?.id;
+    // Memoize expensive calculations
+    const placeReactions = useMemo(
+      () => reactions[place.id] || { likes: 0, comments: 0, userLiked: false },
+      [reactions, place.id]
+    );
 
-    // Reactions data
-    const placeReactions = reactions[place.id] || {
-      likes: 0,
-      comments: 0,
-      userLiked: false,
-    };
+    const isStudentOrTeacher = useMemo(
+      () => userProfile?.role === "student" || userProfile?.role === "teacher",
+      [userProfile]
+    );
+
+    const canReserve = useMemo(
+      () => isStudentOrTeacher && place.is_available && !userReservation,
+      [isStudentOrTeacher, place.is_available, userReservation]
+    );
+
+    const isLibraryStaff = useMemo(
+      () => userProfile?.role === "library_staff",
+      [userProfile]
+    );
+
+    const isOwner = useMemo(
+      () => isLibraryStaff && place.created_by === userProfile?.id,
+      [isLibraryStaff, place.created_by, userProfile]
+    );
 
     const creator = place.creator || place.users;
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
+
+    // Optimize image URL
+    const optimizedImageUrl = useMemo(() => {
+      if (!place.image_url || imageError) return null;
+      // Add image optimization parameters if using an image service
+      return place.image_url;
+    }, [place.image_url, imageError]);
 
     return (
       <div className="bg-white rounded-lg shadow-md overflow-hidden min-h-[480px] w-full flex flex-col">
@@ -71,10 +89,10 @@ const StudyPlaceCard = memo(
         </div>
 
         {/* Image Section with optimized loading */}
-        {place.image_url && !imageError ? (
+        {optimizedImageUrl ? (
           <div className="w-full h-48 bg-gray-100 relative">
             <img
-              src={place.image_url}
+              src={optimizedImageUrl}
               alt={place.name}
               className={`w-full h-48 object-cover transition-opacity duration-300 ${
                 imageLoaded ? "opacity-100" : "opacity-0"
@@ -247,6 +265,17 @@ const StudyPlaceCard = memo(
           </div>
         </div>
       </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison function to prevent unnecessary re-renders
+    return (
+      prevProps.place.id === nextProps.place.id &&
+      prevProps.userReservation?.id === nextProps.userReservation?.id &&
+      prevProps.reactions[prevProps.place.id]?.userLiked ===
+        nextProps.reactions[nextProps.place.id]?.userLiked &&
+      prevProps.place.is_available === nextProps.place.is_available &&
+      prevProps.userProfile?.role === nextProps.userProfile?.role
     );
   }
 );

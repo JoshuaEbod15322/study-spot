@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,6 @@ import {
   FaEdit,
   FaSave,
   FaTimes,
-  FaGraduationCap,
-  FaBook,
-  FaBuilding,
   FaArrowLeft,
   FaCamera,
   FaTrash,
@@ -201,6 +198,12 @@ export function Profile({ onBackToDashboard }) {
     }
   };
 
+  // Memoized user role check
+  const isLibraryStaff = useMemo(
+    () => userProfile?.role === "library_staff",
+    [userProfile]
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 md:ml-0 p-4 md:p-6 flex items-center justify-center mobile-safe-area">
@@ -216,8 +219,6 @@ export function Profile({ onBackToDashboard }) {
       </div>
     );
   }
-
-  const isLibraryStaff = userProfile.role === "library_staff";
 
   return (
     <div className="min-h-screen bg-gray-50 md:ml-0 p-4 md:p-6 mobile-safe-area">
