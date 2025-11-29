@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -483,11 +483,23 @@ export function ApprovalsModal({
   onDelete,
 }) {
   const [processingId, setProcessingId] = useState(null);
+  const [localApprovals, setLocalApprovals] = useState(pendingApprovals);
 
-  const handleAction = async (action, reservationId) => {
+  // Update local state when prop changes
+  useEffect(() => {
+    setLocalApprovals(pendingApprovals);
+  }, [pendingApprovals]);
+
+  const handleAction = async (action, reservationId, isDelete = false) => {
     setProcessingId(reservationId);
     try {
-      await action(reservationId);
+      const result = await action(reservationId);
+      // If it's a delete action and successful, update local state immediately
+      if (isDelete && result?.success) {
+        setLocalApprovals((prev) =>
+          prev.filter((approval) => approval.id !== reservationId)
+        );
+      }
     } finally {
       setProcessingId(null);
     }
@@ -499,13 +511,13 @@ export function ApprovalsModal({
         <DialogHeader>
           <DialogTitle>Pending Approvals</DialogTitle>
           <p>
-            {pendingApprovals.length} pending request
-            {pendingApprovals.length !== 1 ? "s" : ""}
+            {localApprovals.length} pending request
+            {localApprovals.length !== 1 ? "s" : ""}
           </p>
         </DialogHeader>
 
         <div className="max-h-96 overflow-y-auto space-y-4">
-          {pendingApprovals.map((approval) => (
+          {localApprovals.map((approval) => (
             <div
               key={approval.id}
               className="border rounded-lg p-4 bg-white shadow-sm"
@@ -627,7 +639,7 @@ export function ApprovalsModal({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleAction(onDelete, approval.id)}
+                    onClick={() => handleAction(onDelete, approval.id, true)}
                     disabled={processingId === approval.id}
                     className="h-10 w-10 border-red-300 text-red-600 hover:bg-red-50"
                     title="Delete Reservation"
@@ -642,7 +654,7 @@ export function ApprovalsModal({
               </div>
             </div>
           ))}
-          {pendingApprovals.length === 0 && (
+          {localApprovals.length === 0 && (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaCheck className="w-8 h-8 text-green-600" />
@@ -655,7 +667,7 @@ export function ApprovalsModal({
           )}
         </div>
 
-        {pendingApprovals.length > 0 && (
+        {localApprovals.length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
             <p className="text-sm text-blue-800 text-center">
               • <strong>Checkmark</strong>: Accept reservation
@@ -676,20 +688,71 @@ export function ReservationsModal({
   userReservations,
   onDeleteReservation,
   userProfile,
+  onRefresh,
 }) {
+  const [deletingId, setDeletingId] = useState(null);
+  const [localReservations, setLocalReservations] = useState(userReservations);
+
+  // Update local state when prop changes - this ensures modal reflects latest data
+  useEffect(() => {
+    if (userReservations && Array.isArray(userReservations)) {
+      setLocalReservations(userReservations);
+    }
+  }, [userReservations, open]); // Also sync when modal opens
+
+  // Refresh when modal opens
+  useEffect(() => {
+    if (open && onRefresh) {
+      onRefresh();
+    }
+  }, [open, onRefresh]);
+
+  const handleDelete = async (reservationId) => {
+    setDeletingId(reservationId);
+    try {
+      // Update local state immediately for instant UI feedback
+      setLocalReservations((prev) =>
+        prev.filter((reservation) => reservation.id !== reservationId)
+      );
+
+      // Call the delete function and wait for it to complete
+      const result = await onDeleteReservation(reservationId);
+
+      // Always refresh after deletion to ensure we have the latest data
+      if (onRefresh) {
+        await onRefresh();
+        // After refresh, sync local state with updated props
+        // The useEffect will also handle this, but we do it here too for immediate update
+      }
+
+      // If deletion failed, the refresh above will restore the correct state
+      if (result && !result.success) {
+        console.error("Failed to delete reservation:", result.error);
+      }
+    } catch (error) {
+      console.error("Error deleting reservation:", error);
+      // On error, refresh to restore correct state
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>My Place Reservations</DialogTitle>
           <p>
-            {userReservations.length} reservation
-            {userReservations.length !== 1 ? "s" : ""} for your study places
+            {localReservations.length} reservation
+            {localReservations.length !== 1 ? "s" : ""} for your study places
           </p>
         </DialogHeader>
 
         <div className="max-h-96 overflow-y-auto space-y-4">
-          {userReservations.map((reservation) => (
+          {localReservations.map((reservation) => (
             <div
               key={reservation.id}
               className="border rounded-lg p-4 bg-white shadow-sm"
@@ -762,18 +825,23 @@ export function ReservationsModal({
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => onDeleteReservation(reservation.id)}
+                    onClick={() => handleDelete(reservation.id)}
+                    disabled={deletingId === reservation.id}
                     className="h-10 w-10"
-                    title="Delete Reservation"
+                    title={`Delete Reservation (Status: ${reservation.status})`}
                   >
-                    <FaTrash className="w-4 h-4" />
+                    {deletingId === reservation.id ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FaTrash className="w-4 h-4" />
+                    )}
                   </Button>
                 </div>
               </div>
             </div>
           ))}
 
-          {userReservations.length === 0 && (
+          {localReservations.length === 0 && (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaCalendar className="w-8 h-8 text-blue-600" />
@@ -786,10 +854,11 @@ export function ReservationsModal({
           )}
         </div>
 
-        {userReservations.length > 0 && (
+        {localReservations.length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
             <p className="text-sm text-blue-800 text-center">
-              Delete reservations by clicking the trash button.
+              You can delete any reservation (pending, confirmed, or cancelled)
+              by clicking the trash button.
             </p>
           </div>
         )}

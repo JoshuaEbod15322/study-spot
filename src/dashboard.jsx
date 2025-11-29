@@ -172,7 +172,7 @@ function Dashboard() {
               [place.id]: {
                 likes: likesResult.error ? 0 : likesResult.count || 0,
                 comments: commentsResult.error ? 0 : commentsResult.count || 0,
-                userLiked: !userLikeResult.error && !!userLikeResult.data,
+                userLiked: !userLikeResult.error && userLikeResult.data && userLikeResult.data.length > 0,
               },
             };
           } catch (err) {
@@ -245,6 +245,23 @@ function Dashboard() {
   const fetchPendingApprovals = async () => {
     try {
       if (!user) return;
+      
+      // First get all study places created by this user
+      const { data: myPlaces, error: placesError } = await supabase
+        .from("study_places")
+        .select("id")
+        .eq("created_by", user.id);
+
+      if (placesError) throw placesError;
+
+      if (!myPlaces || myPlaces.length === 0) {
+        setPendingApprovals([]);
+        return;
+      }
+
+      const placeIds = myPlaces.map((place) => place.id);
+
+      // Then get pending reservations for those places
       const { data, error } = await supabase
         .from("reservations")
         .select(
@@ -254,7 +271,7 @@ function Dashboard() {
           user:users(name, email, role)
         `
         )
-        .eq("study_place.created_by", user.id)
+        .in("study_place_id", placeIds)
         .eq("status", "pending")
         .order("created_at", { ascending: false });
 
@@ -262,12 +279,30 @@ function Dashboard() {
       setPendingApprovals(data || []);
     } catch (error) {
       console.error("Error fetching pending approvals:", error);
+      setPendingApprovals([]);
     }
   };
 
   const fetchUserReservations = async () => {
     try {
       if (!user) return;
+      
+      // First get all study places created by this user
+      const { data: myPlaces, error: placesError } = await supabase
+        .from("study_places")
+        .select("id")
+        .eq("created_by", user.id);
+
+      if (placesError) throw placesError;
+
+      if (!myPlaces || myPlaces.length === 0) {
+        setUserReservations([]);
+        return;
+      }
+
+      const placeIds = myPlaces.map((place) => place.id);
+
+      // Then get reservations for those places
       const { data, error } = await supabase
         .from("reservations")
         .select(
@@ -277,7 +312,7 @@ function Dashboard() {
           user:users(name, email, role)
         `
         )
-        .eq("study_place.created_by", user.id)
+        .in("study_place_id", placeIds)
         .in("status", ["pending", "confirmed", "cancelled", "completed"])
         .order("created_at", { ascending: false });
 
@@ -285,6 +320,7 @@ function Dashboard() {
       setUserReservations(data || []);
     } catch (error) {
       console.error("Error fetching user reservations:", error);
+      setUserReservations([]);
     }
   };
 
@@ -318,6 +354,9 @@ function Dashboard() {
   }, []);
 
   const handleReservedClick = useCallback(() => {
+    // Refresh reservations before showing the view to ensure latest data
+    fetchReservations();
+    fetchReservedCount();
     setCurrentView("reserved");
   }, []);
 
@@ -343,6 +382,16 @@ function Dashboard() {
   const handleReserve = async () => {
     try {
       if (!user || !selectedPlace) return;
+
+      // Validate that the place is still available
+      if (!selectedPlace.is_available) {
+        setSuccessMessage("This study place is no longer available.");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        setReserveModalOpen(false);
+        await fetchStudyPlaces();
+        return;
+      }
+
       const { error } = await supabase.from("reservations").insert([
         {
           user_id: user.id,
@@ -354,7 +403,16 @@ function Dashboard() {
         },
       ]);
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a duplicate or conflict error
+        if (error.code === "23505" || error.message.includes("duplicate")) {
+          setSuccessMessage("You already have a reservation for this place.");
+        } else {
+          throw error;
+        }
+        setTimeout(() => setSuccessMessage(""), 3000);
+        return;
+      }
 
       setReserveModalOpen(false);
       setSuccessMessage(
@@ -362,7 +420,7 @@ function Dashboard() {
       );
       setTimeout(() => setSuccessMessage(""), 3000);
 
-      // Update data in parallel
+      // Update data in parallel to ensure UI reflects latest state
       await Promise.all([
         fetchReservations(),
         fetchStudyPlaces(),
@@ -370,7 +428,7 @@ function Dashboard() {
       ]);
 
       if (userProfile?.role === "library_staff") {
-        fetchUserReservations();
+        await fetchUserReservations();
       }
     } catch (error) {
       console.error("Error reserving study place:", error);
@@ -483,6 +541,7 @@ function Dashboard() {
 
   const handleDeleteReservation = async (reservationId) => {
     try {
+      // Delete reservation regardless of status (pending, confirmed, cancelled, etc.)
       const { error } = await supabase
         .from("reservations")
         .delete()
@@ -493,6 +552,7 @@ function Dashboard() {
       setSuccessMessage("Reservation deleted successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
 
+      // Update local state immediately for better UX
       setPendingApprovals((prev) =>
         prev.filter((approval) => approval.id !== reservationId)
       );
@@ -503,11 +563,31 @@ function Dashboard() {
         prev.filter((reservation) => reservation.id !== reservationId)
       );
 
-      fetchReservedCount();
+      // Refetch all reservation data to ensure consistency
+      await Promise.all([
+        fetchReservations(),
+        fetchReservedCount(),
+      ]);
+
+      // If user is library staff, also refresh their specific views
+      if (userProfile?.role === "library_staff") {
+        await Promise.all([
+          fetchPendingApprovals(),
+          fetchUserReservations(),
+        ]);
+      } else {
+        // For non-library staff, still refresh userReservations if they have any
+        // (though this modal is typically only for library staff)
+        await fetchUserReservations();
+      }
+
+      // Return success to allow modal to handle the update
+      return { success: true };
     } catch (error) {
       console.error("Error deleting reservation:", error);
       setSuccessMessage("Error deleting reservation. Please try again.");
       setTimeout(() => setSuccessMessage(""), 3000);
+      return { success: false, error };
     }
   };
 
@@ -607,9 +687,20 @@ function Dashboard() {
           .eq("study_place_id", placeId)
           .eq("type", "like");
 
-        if (existingLike && !checkError) {
-          await supabase.from("reactions").delete().eq("id", existingLike.id);
+        // Check if user has already liked (existingLike is an array)
+        const hasLiked = !checkError && existingLike && existingLike.length > 0;
 
+        if (hasLiked) {
+          // Unlike - delete the reaction
+          const likeId = existingLike[0].id;
+          const { error: deleteError } = await supabase
+            .from("reactions")
+            .delete()
+            .eq("id", likeId);
+
+          if (deleteError) throw deleteError;
+
+          // Update local state immediately
           setReactions((prev) => ({
             ...prev,
             [placeId]: {
@@ -619,7 +710,8 @@ function Dashboard() {
             },
           }));
         } else {
-          await supabase.from("reactions").insert([
+          // Like - insert new reaction
+          const { error: insertError } = await supabase.from("reactions").insert([
             {
               user_id: user.id,
               study_place_id: placeId,
@@ -627,6 +719,9 @@ function Dashboard() {
             },
           ]);
 
+          if (insertError) throw insertError;
+
+          // Update local state immediately
           setReactions((prev) => ({
             ...prev,
             [placeId]: {
@@ -637,9 +732,12 @@ function Dashboard() {
           }));
         }
 
-        fetchStudyPlaces();
+        // Refetch study places to ensure reactions are in sync
+        await fetchStudyPlaces();
       } catch (error) {
         console.error("Error handling like:", error);
+        // On error, refetch to restore correct state
+        await fetchStudyPlaces();
       }
     },
     [user]
@@ -792,8 +890,8 @@ function Dashboard() {
           pendingApprovals={pendingApprovals}
           onPost={() => setPostModalOpen(true)}
           onApprovals={() => setApprovalsModalOpen(true)}
-          onReservations={() => {
-            fetchUserReservations();
+          onReservations={async () => {
+            await fetchUserReservations();
             setReservationsModalOpen(true);
           }}
           onSignOut={handleSignOut}
@@ -903,8 +1001,8 @@ function Dashboard() {
           pendingApprovals={pendingApprovals}
           onPost={() => setPostModalOpen(true)}
           onApprovals={() => setApprovalsModalOpen(true)}
-          onReservations={() => {
-            fetchUserReservations();
+          onReservations={async () => {
+            await fetchUserReservations();
             setReservationsModalOpen(true);
           }}
           onSignOut={handleSignOut}
@@ -979,6 +1077,7 @@ function Dashboard() {
         userReservations={userReservations}
         onDeleteReservation={handleDeleteReservation}
         userProfile={userProfile}
+        onRefresh={fetchUserReservations}
       />
     </div>
   );

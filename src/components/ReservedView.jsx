@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,15 +12,10 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
 
-  // Initial data fetch
-  useEffect(() => {
-    if (user) {
-      fetchReservedPlaces();
-    }
-  }, [user]);
-
   // Reserved places data fetch
-  const fetchReservedPlaces = async () => {
+  const fetchReservedPlaces = useCallback(async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
 
@@ -52,7 +47,26 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  // Initial data fetch and refresh when component becomes visible
+  useEffect(() => {
+    fetchReservedPlaces();
+  }, [fetchReservedPlaces]);
+
+  // Refresh data when component becomes visible (handles page refresh scenarios)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchReservedPlaces();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [fetchReservedPlaces]);
 
   // Reservation cancellation handler
   const handleCancelReservation = async (reservationId) => {
@@ -66,9 +80,13 @@ export function ReservedView({ user, onBackToDashboard, userProfile }) {
 
       if (error) throw error;
 
+      // Update local state immediately for better UX
       setReservedPlaces((prev) =>
         prev.filter((reservation) => reservation.id !== reservationId)
       );
+
+      // Refetch data from database to ensure consistency
+      await fetchReservedPlaces();
     } catch (error) {
       console.error("Error cancelling reservation:", error);
     } finally {
