@@ -371,24 +371,29 @@ export function Profile({ onBackToDashboard }) {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="posts" className="w-full">
-          <TabsList
-            className={`grid w-full ${
-              isLibraryStaff ? "grid-cols-2" : "grid-cols-3"
-            }`}
-          >
-            <TabsTrigger value="posts">
-              {isLibraryStaff ? "My Posts" : "Liked Posts"}
-            </TabsTrigger>
-            {!isLibraryStaff && (
-              <TabsTrigger value="reserved">Reserved</TabsTrigger>
+        <Tabs
+          defaultValue={isLibraryStaff ? "posts" : "reserved"}
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            {isLibraryStaff ? (
+              <>
+                <TabsTrigger value="posts">My Posts</TabsTrigger>
+                <TabsTrigger value="liked">Liked Posts</TabsTrigger>
+              </>
+            ) : (
+              <>
+                <TabsTrigger value="reserved">Reserved</TabsTrigger>
+                <TabsTrigger value="liked">Liked Posts</TabsTrigger>
+              </>
             )}
-            <TabsTrigger value="liked">Liked Posts</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="posts">
-            <RoleBasedPosts userProfile={userProfile} />
-          </TabsContent>
+          {isLibraryStaff && (
+            <TabsContent value="posts">
+              <RoleBasedPosts userProfile={userProfile} />
+            </TabsContent>
+          )}
 
           {!isLibraryStaff && (
             <TabsContent value="reserved">
@@ -414,7 +419,7 @@ function RoleBasedPosts({ userProfile }) {
     fetchPosts();
   }, [userProfile]);
 
-  // Fetch posts based on user role (library staff sees their own posts, others see liked posts)
+  // Fetch posts (library staff)
   const fetchPosts = async () => {
     try {
       let data = [];

@@ -76,7 +76,6 @@ function Dashboard() {
   // Navigation
   const navigate = useNavigate();
 
-  // Effect for responsive design
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -86,14 +85,12 @@ function Dashboard() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Effect for initial data loading
   useEffect(() => {
     if (user) {
       fetchInitialData();
     }
   }, [user]);
 
-  // Effect for library staff specific data
   useEffect(() => {
     if (userProfile?.role === "library_staff") {
       fetchPendingApprovals();
@@ -101,7 +98,6 @@ function Dashboard() {
     }
   }, [userProfile]);
 
-  // Optimized data fetching functions
   const fetchInitialData = useCallback(async () => {
     try {
       setLoading(true);
@@ -150,7 +146,6 @@ function Dashboard() {
       if (error) throw error;
       setStudyPlaces(placesData || []);
 
-      // Fetch reactions in parallel for better performance
       if (placesData && user) {
         const reactionsPromises = placesData.map(async (place) => {
           try {
@@ -166,8 +161,7 @@ function Dashboard() {
                   .select("id")
                   .eq("study_place_id", place.id)
                   .eq("user_id", user.id)
-                  .eq("type", "like")
-                  .single(),
+                  .eq("type", "like"),
                 supabase
                   .from("comments")
                   .select("id", { count: "exact", head: true })
@@ -611,8 +605,7 @@ function Dashboard() {
           .select("id")
           .eq("user_id", user.id)
           .eq("study_place_id", placeId)
-          .eq("type", "like")
-          .single();
+          .eq("type", "like");
 
         if (existingLike && !checkError) {
           await supabase.from("reactions").delete().eq("id", existingLike.id);
@@ -823,7 +816,6 @@ function Dashboard() {
         } mobile-safe-area`}
       >
         <main className="flex-1 p-4 sm:p-6 relative">
-          {/* Conditional rendering based on current view */}
           {currentView === "profile" ? (
             <Profile onBackToDashboard={handleHomeClick} />
           ) : currentView === "reserved" ? (
@@ -836,14 +828,11 @@ function Dashboard() {
             <Messages onBackToDashboard={handleHomeClick} />
           ) : (
             <>
-              {/* Loading state */}
               {loading ? (
                 <LoadingSpinner />
               ) : (
-                /* Study places grid */
                 <div className="responsive-grid">
                   {studyPlaces.length === 0 ? (
-                    /* Empty state */
                     <div className="col-span-full text-center py-12">
                       <img
                         src={educationImg}
