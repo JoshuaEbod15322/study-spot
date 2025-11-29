@@ -12,13 +12,11 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -57,9 +55,9 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
-      // Clear local state first
       setUser(null);
 
+<<<<<<< HEAD
       // Sign out from Supabase with global scope to clear all tabs
       const { error } = await supabase.auth.signOut({ scope: "global" });
 
@@ -115,6 +113,9 @@ export const AuthProvider = ({ children }) => {
           }
         }
       }
+=======
+      const { error } = await supabase.auth.signOut();
+>>>>>>> 74e1ba1205811d35b29dafdbe657c3072ce8eeb5
 
       if (error) {
         console.error("Supabase signOut error:", error);
@@ -124,7 +125,10 @@ export const AuthProvider = ({ children }) => {
       return { error: null };
     } catch (error) {
       console.error("Unexpected error during signOut:", error);
+<<<<<<< HEAD
       // Even if there's an unexpected error, clear local state and storage
+=======
+>>>>>>> 74e1ba1205811d35b29dafdbe657c3072ce8eeb5
       setUser(null);
       if (typeof window !== "undefined") {
         const storageKey = "supabase.auth.token";
