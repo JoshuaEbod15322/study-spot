@@ -24,7 +24,7 @@ import {
 } from "react-icons/fa";
 import "../responsive.css";
 
-// Main profile component with user information and editing capabilities
+// Main profile component
 export function Profile({ onBackToDashboard }) {
   const { user } = useAuth();
   const [userProfile, setUserProfile] = useState(null);
@@ -40,7 +40,7 @@ export function Profile({ onBackToDashboard }) {
     }
   }, [user]);
 
-  // Fetch user profile data from Supabase
+  // Fetch user profile data
   const fetchUserProfile = async () => {
     try {
       const { data, error } = await supabase
@@ -497,7 +497,7 @@ function RoleBasedPosts({ userProfile }) {
   );
 }
 
-// Component to display user reserved spaces
+//display user reserved spaces
 function ReservedSpaces({ userProfile }) {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -506,7 +506,7 @@ function ReservedSpaces({ userProfile }) {
     fetchReservations();
   }, [userProfile]);
 
-  // Fetch user reservations from Supabase
+  // Fetch user reservations
   const fetchReservations = async () => {
     try {
       const { data, error } = await supabase
@@ -605,7 +605,7 @@ function LikedPosts({ userProfile }) {
     fetchLikedPosts();
   }, [userProfile]);
 
-  // Fetch user liked posts from Supabase
+  // Fetch user liked posts
   const fetchLikedPosts = async () => {
     try {
       const { data: reactionsData, error } = await supabase
