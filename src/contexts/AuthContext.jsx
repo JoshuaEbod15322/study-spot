@@ -10,57 +10,173 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [storageError, setStorageError] = useState(false);
+
+  const getSafeSession = async () => {
+    try {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) {
+        if (
+          error.message?.includes("storage") ||
+          error.message?.includes("localStorage") ||
+          error.message?.includes("404") ||
+          error.message?.includes("NOT_FOUND")
+        ) {
+          console.warn("Storage not available (incognito mode?)", error);
+          setStorageError(true);
+          return null;
+        }
+        throw error;
+      }
+
+      return session?.user ?? null;
+    } catch (error) {
+      console.error("Error getting session:", error);
+      setStorageError(true);
+      return null;
+    }
+  };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        const isStorageAvailable = () => {
+          try {
+            localStorage.setItem("test", "test");
+            localStorage.removeItem("test");
+            return true;
+          } catch {
+            return false;
+          }
+        };
+
+        if (!isStorageAvailable()) {
+          console.warn("Storage not available - incognito mode detected");
+          setStorageError(true);
+          if (mounted) {
+            setUser(null);
+            setLoading(false);
+          }
+          return;
+        }
+
+        const sessionUser = await getSafeSession();
+
+        if (mounted) {
+          setUser(sessionUser);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+          setStorageError(true);
+        }
+      }
+    };
+
+    initializeAuth();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      if (mounted) {
+        try {
+          if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+            setUser(null);
+          } else if (session?.user) {
+            setUser(session.user);
+          }
+          setLoading(false);
+        } catch (error) {
+          console.error("Auth state change error:", error);
+          setUser(null);
+          setLoading(false);
+        }
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (credentials) => {
-    return await supabase.auth.signUp(credentials);
+    try {
+      if (storageError) {
+        throw new Error(
+          "Storage not available. Please disable incognito mode or allow cookies."
+        );
+      }
+      return await supabase.auth.signUp(credentials);
+    } catch (error) {
+      console.error("Signup error:", error);
+      throw error;
+    }
   };
 
   const signIn = async (credentials) => {
-    return await supabase.auth.signInWithPassword(credentials);
+    try {
+      if (storageError) {
+        throw new Error(
+          "Storage not available. Please disable incognito mode or allow cookies."
+        );
+      }
+      return await supabase.auth.signInWithPassword(credentials);
+    } catch (error) {
+      console.error("Signin error:", error);
+      throw error;
+    }
   };
 
   const signInWithGoogle = async () => {
-    return await supabase.auth.signInWithOAuth({
-      provider: "google",
-    });
+    try {
+      if (storageError) {
+        throw new Error(
+          "Storage not available. Please disable incognito mode or allow cookies."
+        );
+      }
+      return await supabase.auth.signInWithOAuth({
+        provider: "google",
+      });
+    } catch (error) {
+      console.error("Google signin error:", error);
+      throw error;
+    }
   };
 
   const signInWithFacebook = async () => {
-    return await supabase.auth.signInWithOAuth({
-      provider: "facebook",
-    });
+    try {
+      if (storageError) {
+        throw new Error(
+          "Storage not available. Please disable incognito mode or allow cookies."
+        );
+      }
+      return await supabase.auth.signInWithOAuth({
+        provider: "facebook",
+      });
+    } catch (error) {
+      console.error("Facebook signin error:", error);
+      throw error;
+    }
   };
 
   const signOut = async () => {
     try {
       setUser(null);
-
       const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error("Supabase signOut error:", error);
-        return { error };
-      }
-
+      if (error) throw error;
       return { error: null };
     } catch (error) {
-      console.error("Unexpected error during signOut:", error);
+      console.error("Signout error:", error);
       setUser(null);
       return { error };
     }
@@ -74,6 +190,7 @@ export const AuthProvider = ({ children }) => {
     signInWithFacebook,
     signOut,
     loading,
+    storageError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

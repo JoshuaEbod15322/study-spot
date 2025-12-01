@@ -9,7 +9,7 @@ const Signup = lazy(() => import("./signup.jsx"));
 const Dashboard = lazy(() => import("./dashboard.jsx"));
 
 function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loading, storageError } = useAuth();
 
   if (loading) {
     return <div>Loading...</div>;
