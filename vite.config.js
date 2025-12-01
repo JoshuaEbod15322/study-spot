@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      injectRegister: false,
+      injectRegister: "auto", // ← KEEP as a STRING "auto"
       includeAssets: ["/education.png"],
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
@@ -19,7 +19,8 @@ export default defineConfig({
         runtimeCaching: [
           {
             // Don't cache auth endpoints - always go to network (GET and POST)
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*\/auth\/v1\/(token|logout|user)/i,
+            urlPattern:
+              /^https:\/\/.*\.supabase\.co\/.*\/auth\/v1\/(token|logout|user)/i,
             handler: "NetworkOnly",
             options: {
               cacheName: "supabase-auth",
@@ -28,7 +29,8 @@ export default defineConfig({
           },
           {
             // Don't cache auth POST requests (logout, signin, etc.)
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*\/auth\/v1\/(token|logout|user|signin|signup)/i,
+            urlPattern:
+              /^https:\/\/.*\.supabase\.co\/.*\/auth\/v1\/(token|logout|user|signin|signup)/i,
             handler: "NetworkOnly",
             options: {
               cacheName: "supabase-auth",
