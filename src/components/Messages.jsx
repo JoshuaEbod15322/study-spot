@@ -3,12 +3,20 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FaPaperPlane, FaUser, FaComment, FaArrowLeft } from "react-icons/fa";
+import {
+  FaPaperPlane,
+  FaUser,
+  FaComment,
+  FaArrowLeft,
+  FaSearch,
+  FaTimes,
+} from "react-icons/fa";
 import "../responsive.css";
 
 export function Messages({ onBackToDashboard }) {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -18,6 +26,9 @@ export function Messages({ onBackToDashboard }) {
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showUserList, setShowUserList] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
+  const [availableRoles, setAvailableRoles] = useState([]);
 
   // Layout responsiveness
   useEffect(() => {
@@ -45,6 +56,34 @@ export function Messages({ onBackToDashboard }) {
     }
   }, [user]);
 
+  // Filter users when search query or filter role changes
+  useEffect(() => {
+    if (!users.length) {
+      setFilteredUsers([]);
+      return;
+    }
+
+    let filtered = [...users];
+
+    // Apply role filter
+    if (filterRole !== "all") {
+      filtered = filtered.filter((user) => user.role === filterRole);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(
+        (user) =>
+          user.name.toLowerCase().includes(query) ||
+          (user.role && user.role.toLowerCase().includes(query)) ||
+          (user.bio && user.bio.toLowerCase().includes(query))
+      );
+    }
+
+    setFilteredUsers(filtered);
+  }, [users, searchQuery, filterRole]);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -59,13 +98,24 @@ export function Messages({ onBackToDashboard }) {
       if (error) {
         setError("Failed to load users: " + error.message);
         setUsers([]);
+        setFilteredUsers([]);
         return;
       }
 
-      setUsers(data || []);
+      const userData = data || [];
+      setUsers(userData);
+      setFilteredUsers(userData);
+
+      // Extract unique roles for filter dropdown
+      const roles = [
+        "all",
+        ...new Set(userData.map((u) => u.role).filter(Boolean)),
+      ];
+      setAvailableRoles(roles);
     } catch (error) {
       setError("An unexpected error occurred");
       setUsers([]);
+      setFilteredUsers([]);
     } finally {
       setLoading(false);
     }
@@ -185,9 +235,21 @@ export function Messages({ onBackToDashboard }) {
     [newMessage, selectedUser, user, conversation]
   );
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+  };
+
+  const handleFilterChange = (e) => {
+    setFilterRole(e.target.value);
+  };
+
   //user list items
   const userListItems = useMemo(() => {
-    return users.map((userItem) => {
+    return filteredUsers.map((userItem) => {
       const isSelected = selectedUser?.id === userItem.id;
 
       return (
@@ -231,7 +293,7 @@ export function Messages({ onBackToDashboard }) {
         </div>
       );
     });
-  }, [users, selectedUser]);
+  }, [filteredUsers, selectedUser]);
 
   //message items
   const messageItems = useMemo(() => {
@@ -353,17 +415,95 @@ export function Messages({ onBackToDashboard }) {
                 </div>
               )}
 
+              {/* Search and Filter Section */}
+              <div className="p-3 border-b border-gray-200 bg-gray-50">
+                <div className="relative mb-3">
+                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    type="text"
+                    placeholder="Search"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    className="pl-10 pr-10 text-sm"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={handleClearSearch}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <FaTimes className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                {availableRoles.length > 1 && (
+                  <div className="flex items-center space-x-2">
+                    <label
+                      htmlFor="role-filter"
+                      className="text-sm text-gray-600 whitespace-nowrap"
+                    >
+                      Filter by role:
+                    </label>
+                    <select
+                      id="role-filter"
+                      value={filterRole}
+                      onChange={handleFilterChange}
+                      className="flex-1 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      {availableRoles.map((role) => (
+                        <option key={role} value={role}>
+                          {role === "all" ? "All Roles" : role}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
               <div className="flex-1 overflow-y-auto">
-                {users.length === 0 ? (
+                {filteredUsers.length === 0 ? (
                   <div className="text-center p-6 sm:p-8 text-gray-500">
                     <FaUser className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-gray-400" />
-                    <p className="mb-2">No other users found</p>
-                    <p className="text-sm">
-                      There are no other users to chat with yet.
+                    <p className="mb-2">
+                      {searchQuery || filterRole !== "all"
+                        ? "No users match your search"
+                        : "No other users found"}
                     </p>
+                    <p className="text-sm">
+                      {searchQuery || filterRole !== "all"
+                        ? "Try adjusting your search or filter criteria"
+                        : "There are no other users to chat with yet."}
+                    </p>
+                    {(searchQuery || filterRole !== "all") && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSearchQuery("");
+                          setFilterRole("all");
+                        }}
+                        className="mt-4"
+                      >
+                        Clear filters
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
+                    <div className="p-2 text-xs text-gray-500 bg-gray-50">
+                      Showing {filteredUsers.length} of {users.length} users
+                      {(searchQuery || filterRole !== "all") && (
+                        <button
+                          onClick={() => {
+                            setSearchQuery("");
+                            setFilterRole("all");
+                          }}
+                          className="ml-2 text-blue-600 hover:text-blue-800"
+                        >
+                          Clear all
+                        </button>
+                      )}
+                    </div>
                     {userListItems}
                   </div>
                 )}
