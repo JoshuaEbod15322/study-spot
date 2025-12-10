@@ -98,7 +98,7 @@ export function PostModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="image">Image (Optional)</Label>
+            <Label htmlFor="image">Image *</Label>
             <Input
               id="image"
               type="file"
@@ -464,7 +464,7 @@ export function CommentsModal({
               className="flex-1 h-12"
             />
             <Button onClick={onAddComment} disabled={!newComment.trim()}>
-              Post
+              Send
             </Button>
           </div>
         </div>
@@ -693,12 +693,11 @@ export function ReservationsModal({
   const [deletingId, setDeletingId] = useState(null);
   const [localReservations, setLocalReservations] = useState(userReservations);
 
-  // Update local state when prop changes - this ensures modal reflects latest data
   useEffect(() => {
     if (userReservations && Array.isArray(userReservations)) {
       setLocalReservations(userReservations);
     }
-  }, [userReservations, open]); // Also sync when modal opens
+  }, [userReservations, open]);
 
   // Refresh when modal opens
   useEffect(() => {
@@ -707,6 +706,7 @@ export function ReservationsModal({
     }
   }, [open, onRefresh]);
 
+  // Deletion handler
   const handleDelete = async (reservationId) => {
     setDeletingId(reservationId);
     try {
